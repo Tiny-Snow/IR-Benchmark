@@ -1,0 +1,13 @@
+Final dataset statistics:
+Dataset: Gowalla
+Number of users: 29858
+Number of items: 40988
+Number of interactions: 1027464
+Number of train interactions: 821971
+Number of test interactions: 205493
+Density: 0.00084
+Number of unique users in train: 29858
+Number of unique items in train: 40988
+Number of unique users in test: 28785
+Number of unique items in test: 40694
+N-core: 10

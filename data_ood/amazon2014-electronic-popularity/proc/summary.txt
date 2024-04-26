@@ -1,0 +1,13 @@
+Final dataset statistics:
+Dataset: Amazon2014-Electronic
+Number of users: 13455
+Number of items: 8360
+Number of interactions: 234521
+Number of train interactions: 187616
+Number of test interactions: 46905
+Density: 0.00208
+Number of unique users in train: 13455
+Number of unique items in train: 8360
+Number of unique users in test: 12610
+Number of unique items in test: 8335
+N-core: 10

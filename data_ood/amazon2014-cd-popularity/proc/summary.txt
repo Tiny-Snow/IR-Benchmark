@@ -1,0 +1,13 @@
+Final dataset statistics:
+Dataset: Amazon2014-CD
+Number of users: 12784
+Number of items: 13874
+Number of interactions: 360763
+Number of train interactions: 288610
+Number of test interactions: 72153
+Density: 0.00203
+Number of unique users in train: 12784
+Number of unique items in train: 13874
+Number of unique users in test: 11969
+Number of unique items in test: 13812
+N-core: 10

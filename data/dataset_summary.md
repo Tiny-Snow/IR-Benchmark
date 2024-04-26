@@ -67,18 +67,25 @@ N-core: 10
 | Dataset | Users | Items | Interactions | Train Interactions | Test Interactions | Density | $N$-core | Rating |
 | ------- | ----- | ----- | ------------ | ------------------ | ----------------- | ------- | -------- | ---------------- |
 | [Amazon2014](#amazon) | 718,190 | 460,233 | 16,971,561 | 13,294,890 | 3,676,671 | 0.00005 | 10 | $\geq$ 3 |
+| [Amazon2014-Beauty](#amazon) | 1,237 | 719 | 25,736 | 20,101 | 5,635 | 0.02894 | 10 | $\geq$ 3 |
 | [Amazon2014-Book](#amazon) | 135,109 | 115,172 | 4,042,382 | 3,180,699 | 861,683 | 0.00026 | 10 | $\geq$ 3 |
+| [Amazon2014-CD](#amazon) | 12,784 | 13,874 | 360,763 | 283,608 | 77,155 | 0.00203 | 10 | $\geq$ 3 |
+| [Amazon2014-Electronic](#amazon) | 13,455 | 8,360 | 234,521 | 182,398 | 52,123 | 0.00208 | 10 | $\geq$ 3 |
+| [Amazon2014-Health](#amazon) | 1,974 | 1,200 | 48,189 | 37,784 | 10,405 | 0.02034 | 10 | $\geq$ 3 |
+| [Amazon2014-Movie](#amazon) | 26,968 | 18,563 | 762,957 | 599,903 | 163,054 | 0.00152 | 10 | $\geq$ 3 |
 | [Amazon2018](#amazon) | 1,591,189 | 3,481,925 | 88,111,403 | 69,856,556 | 18,254,847 | 0.00002 | 10 | $\geq$ 3 |
 | [Amazon2018-Book](#amazon) | 274,926 | 537,851 | 14,847,692 | 11,768,846 | 3,078,846 | 0.00010 | 10 | $\geq$ 3 |
 | [Douban-Movie](#douban) | 51,803 | 25,993 | 8,355,127 | 6,664,958 | 1,690,169 | 0.00620 | 10 | $\geq$ 3 |
 | [Douban-Book](#douban) | 18,662 | 15,207 | 938,173 | 743,085 | 195,088 | 0.00331 | 10 | $\geq$ 3 |
 | [Douban-Music](#douban) | 13,343 | 15,957 | 903,178 | 717,188 | 185,990 | 0.00424 | 10 | $\geq$ 3 |
+| [Food](#food) | 5,875 | 9,852 | 233,038 | 184,106 | 48,932 | 0.00403 | 10 | $\geq$ 3 |
 | [Gowalla](#gowalla) | 29,858 | 40,988 | 1,027,464 | 810,128 | 217,336 | 0.00084 | 10 | $-$ |
 | [Movielens-100k](#movielens) | 939 | 1,016 | 80,393 | 63,944 | 16,449 | 0.08427 | 10 | $\geq$ 3 |
 | [Movielens-1M](#movielens) | 6,033 | 3,123 | 834,449 | 665,133 | 169,316 | 0.04429 | 10 | $\geq$ 3 |
 | [Movielens-10M](#movielens) | 69,584 | 9,175 | 8,233,567 | 6,559,227 | 1,674,340 | 0.01290 | 10 | $\geq$ 3 |
 | [Movielens-20M](#movielens) | 137,523 | 14,258 | 16,447,894 | 13,103,591 | 3,344,303 | 0.00839 | 10 | $\geq$ 3 |
 | [Movielens-25M](#movielens) | 161,585 | 21,039 | 20,427,563 | 16,277,892 | 4,149,671 | 0.00601 | 10 | $\geq$ 3 |
+| [Yahoo Music](#yahoo-music) | 15,400 | 1,000 | 365,704 | 286,540 | 79,164 | 0.02375 | 10 | $-$ |
 | [Yelp2018](#yelp) | 55,616 | 34,945 | 1,506,777 | 1,183,556 | 323,221 | 0.00078 | 10 | $\geq$ 3 |
 | [Yelp2022](#yelp) | 69,090 | 41,814 | 1,897,447 | 1,490,688 | 406,759 | 0.00066 | 10 | $\geq$ 3 |
 
@@ -89,25 +96,42 @@ N-core: 10
 
 #### Description
 
-The Amazon dataset is a large crawl of product reviews from Amazon, including reviews, metadata and graphs. The latest Amazon dataset contains 233.1 million reviews in the range May 1996 - Oct 2018. Many previous research papers use the old version, which contains 142.8 million reviews spanning May 1996 - July 2014. We process these two versions of the Amazon dataset and name them as Amazon2018 and Amazon2014, respectively.
+The Amazon dataset is a large crawl of product reviews from Amazon, including reviews, metadata and graphs. The latest Amazon dataset contains 233.1 million reviews in the range May 1996 - Oct 2018. Many previous research papers use the old version, which contains 142.8 million reviews spanning May 1996 - July 2014. We process these two versions of the Amazon dataset and name them as Amazon2018 and Amazon2014, respectively. We are planning to process the Amazon2023 dataset with 571.5 million reviews in the range May 1996 - Sep 2023.
 
-The Amazon dataset is often categorized into different domains, such as Amazon-Book, Amazon-Beauty, Amazon-Electronics, etc. Currently, we only process: 
+The Amazon dataset is often categorized into different domains, such as Amazon-Book, Amazon-Beauty, Amazon-Electronics, etc. Currently, we have processed the following datasets:
+
+**Amazon2023**: 
+
+**Amazon2018**: 
 - [Amazon2018](https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/categoryFilesSmall/all_csv_files.csv): All reviews with 233,055,327 reviews. 
 - [Amazon2018-Book](https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/categoryFilesSmall/Books.csv): Book reviews with 51,311,621 reviews.
+
+**Amazon2014**:
 - [Amazon2014](https://snap.stanford.edu/data/amazon/productGraph/item_dedup.csv): All reviews with 82,677,131 reviews.
+- [Amazon2014-Beauty](https://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_Beauty.csv): Beauty reviews with 2,023,070 reviews.
 - [Amazon2014-Book](https://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_Books.csv): Book reviews with 22,507,155 reviews.
+- [Amazon2014-CD](https://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_CDs_and_Vinyl.csv): CD and Vinyl reviews with 3,749,004 reviews.
+- [Amazon2014-Electronic](https://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_Electronics.csv): Electronic reviews with 7,824,482 reviews.
+- [Amazon2014-Health](https://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_Health_and_Personal_Care.csv): Health and Personal Care reviews with 2,982,326 reviews.
+- [Amazon2014-Movie](https://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_Movies_and_TV.csv): Movie and TV reviews with 4,607,047 reviews.
 
 For the complete list of Amazon datasets, you can refer to:
+- [RSPD/Amazon2023](https://amazon-reviews-2023.github.io/).
 - [RSPD/Amazon2018](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon_v2/).
 - [RSPD/Amazon2014](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon/links.html).
 
 #### Processing Method
 
-We adopt the "Ratings only" version for recommendation task, which only includes the `(item, user, rating, timestamp)` tuples, while the `rating` is the number of stars (1-5, has some error 0 ratings). We omit the `timestamp`, drop the duplicate reviews (if two reviews have the same user and item) and low-rating reviews (if the review has less than 3 stars), then apply 10-core filterin and obtain the training and testing sets with a ratio of 8:2: 
+We adopt the "Ratings only" version for recommendation task, which only includes the `(item, user, rating, timestamp)` tuples, while the `rating` is the number of stars (1-5, has some error 0 ratings). We omit the `timestamp`, drop the duplicate reviews (if two reviews have the same user and item) and low-rating reviews (if the review has less than 3 stars), then apply 10-core filterin and obtain the training and testing sets with a ratio of 8:2. The filtered dataset statistics are shown as follows:
 - Amazon2018: 1,591,189 users, 3,481,925 items and 88,111,403 reviews.
 - Amazon2018-Book: 274,926 users, 537,851 items and 14,847,692 reviews.
 - Amazon2014: 718,190 users, 460,233 items and 16,971,561 reviews.
+- Amazon2014-Beauty: 1,237 users, 719 items and 25,736 reviews.
 - Amazon2014-Book: 135,109 users, 115,172 items and 4,042,382 reviews.
+- Amazon2014-CD: 12,784 users, 13,874 items and 360,763 reviews.
+- Amazon2014-Electronic: 13,455 users, 8,360 items and 234,521 reviews.
+- Amazon2014-Health: 1,974 users, 1,200 items and 48,189 reviews.
+- Amazon2014-Movie: 26,968 users, 18,563 items and 762,957 reviews.
 
 
 #### Final Dataset
@@ -123,21 +147,22 @@ We adopt the "Ratings only" version for recommendation task, which only includes
 | $N$-core | 10 | 10 |
 | Rating | $\geq$ 3 | $\geq$ 3 |
 
-| Amazon2014 | All Statistics | Book Statistics |
-| ---------- | --------------- | --------------- |
-| Users | 718,190 | 135,109 |
-| Items | 460,233 | 115,172 |
-| Interactions | 16,971,561 | 4,042,382 |
-| Train Interactions | 13,294,890 | 3,180,699 |
-| Test Interactions | 3,676,671 | 861,683 |
-| Density | 0.00005 | 0.00026 |
-| $N$-core | 10 | 10 |
-| Rating | $\geq$ 3 | $\geq$ 3 |
+| Amazon2014 | All Statistics | Beauty Statistics | Book Statistics | CD Statistics | Electronic Statistics | Health Statistics | Movie Statistics |
+| ---------- | --------------- | --------------- | --------------- | --------------- | --------------- | --------------- | --------------- |
+| Users | 718,190 | 1,237 | 135,109 | 12,784 | 13,455 | 1,974 | 26,968 |
+| Items | 460,233 | 719 | 115,172 | 13,874 | 8,360 | 1,200 | 18,563 |
+| Interactions | 16,971,561 | 25,736 | 4,042,382 | 360,763 | 234,521 | 48,189 | 762,957 |
+| Train Interactions | 13,294,890 | 20,101 | 3,180,699 | 283,608 | 182,398 | 37,784 | 599,903 |
+| Test Interactions | 3,676,671 | 5,635 | 861,683 | 77,155 | 52,123 | 10,405 | 163,054 |
+| Density | 0.00005 | 0.02894 | 0.00026 | 0.00203 | 0.00208 | 0.02034 | 0.00152 |
+| $N$-core | 10 | 10 | 10 | 10 | 10 | 10 | 10 |
+| Rating | $\geq$ 3 | $\geq$ 3 | $\geq$ 3 | $\geq$ 3 | $\geq$ 3 | $\geq$ 3 | $\geq$ 3 |
 
 
 #### Source
 
 We collect the Amazon dataset from [RSPD/Amazon Product Reviews](https://cseweb.ucsd.edu/~jmcauley/datasets.html#amazon_reviews)'s "Ratings only" datasets: 
+- [Amazon2023](https://amazon-reviews-2023.github.io/): The complete review data of Amazon2023 is in [Amazon2023-All](https://amazon-reviews-2023.github.io/data_processing/0core.html).
 - [Amazon2018](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon_v2/): The complete review data of Amazon2018 is in [Amazon2018-All](https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/categoryFilesSmall/all_csv_files.csv). 
 - [Amazon2014](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon/links.html): The complete review data of Amazon2014 is in [Amazon2014-All](https://snap.stanford.edu/data/amazon/productGraph/item_dedup.csv).
 
@@ -161,7 +186,7 @@ The Douban dataset is crawled from a popular Chinese social networking service p
 | ------- | ----- | ----- | ------------ |
 | Douban-Movie | 94,890 | 81,906 | 11,742,260 |
 | Douban-Book | 46,548 | 212,995 | 1,908,081 |
-| Douban-Music | 39,742 | 164,223 | 1,792,501 
+| Douban-Music | 39,742 | 164,223 | 1,792,501 |
 
 #### Processing Method
 
@@ -198,6 +223,47 @@ We collect the Douban dataset from the implementation of original paper: [DGRec-
 You may also access the original paper:
 - Song, Weiping, et al. "[Session-based social recommendation via dynamic graph attention networks.](https://dl.acm.org/doi/abs/10.1145/3289600.3290989)" Proceedings of the Twelfth ACM international conference on web search and data mining. 2019.
 
+
+------
+
+### Food
+
+#### Description
+
+The Food dataset consists of 180K+ recipes and 700K+ recipe reviews covering 18 years of user interactions and uploads on Food.com (formerly GeniusKitchen). 
+
+#### Processing Method
+
+The dataset has three splits: `interactions_train.csv`, `interactions_validation.csv` and `interactions_test.csv` (however, we re-split the dataset), each row in the file is in the format of `(user_id, recipe_id, date, rating, u, i)`, e.g.
+
+| user_id | recipe_id | date | rating | u | i |
+| ------- | --------- | ---- | ------ | - | - |
+| 2046 | 4684 | 2000-02-25 | 5.0 | 22095 | 44367 |
+| 2046 | 517 | 2000-02-25 | 5.0 | 22095 | 87844 |
+| 1773 | 7435 | 2000-03-13 | 5.0 | 24732 | 138181 |
+| 1773 | 278 | 2000-03-13 | 4.0 | 24732 | 93054 |
+| 2046 | 3431 | 2000-04-07 | 5.0 | 22095 | 101723 |
+
+The `user_id` and `u`, `recipe_id` and `i` are one-to-one mapping, we can treat the `user_id` as the user ID, and the `recipe_id` as the item ID. We omit the `date`, drop the duplicate reviews (if two reviews have the same user and item) and low-rating reviews (if the review has less than 3 stars), then apply 10-core filtering and obtain the training and testing sets with a ratio of 8:2.
+
+#### Final Dataset
+
+| Food | Statistics |
+| ---- | ---------- |
+| Users | 5,875 |
+| Items | 9,852 |
+| Interactions | 233,038 |
+| Train Interactions | 184,106 |
+| Test Interactions | 48,932 |
+| Density | 0.00403 |
+| $N$-core | 10 |
+| Rating | $\geq$ 3 |
+
+#### Source
+
+We collect the Food dataset from [Kaggle/Food](https://www.kaggle.com/datasets/shuyangli94/food-com-recipes-and-user-interactions).
+
+
 ------
 
 ### Gowalla
@@ -231,6 +297,7 @@ Let's focus on the `user` and `location id` columns. We can treat the `user` as 
 | Test Interactions | 217,336 |
 | Density | 0.00084 |
 | $N$-core | 10 |
+| Rating | $-$ |
 
 #### Source
 
@@ -285,6 +352,39 @@ We collect the Movielens dataset from [GroupLens/MovieLens](https://grouplens.or
 
 You may also access the original paper:
 - F. Maxwell Harper and Joseph A. Konstan. 2015. The MovieLens Datasets: History and Context. ACM Transactions on Interactive Intelligent Systems (TiiS) 5, 4, Article 19 (December 2015), 19 pages. DOI=http://dx.doi.org/10.1145/2827872
+
+------
+
+### Yahoo Music
+
+#### Description
+
+The Yahoo Music dataset represents a snapshot of the Yahoo! Music community's preferences for various musical artists. The dataset contains over ten million ratings of musical artists given by Yahoo! Music users over the course of a one month period sometime prior to March 2004. 
+
+You may request the dataset from the Yahoo! Webscope program. The dataset is available in the [R1 - Yahoo! Music User Ratings of Musical Artists, version 1.0 (423 MB)](https://webscope.sandbox.yahoo.com/catalog.php?datatype=r). However, currently we do not get the raw version of the dataset, and we will adopt the processed dataset in the paper [Distributionally Robust Graph-based Recommendation System](https://arxiv.org/abs/2402.12994). 
+
+#### Processing Method
+
+The processed dataset we use has already satisfied the 10-core filtering, thus our data-clean process does not discard any interactions. We only re-shuffle and split the dataset into training and testing sets with a ratio of 8:2. Note that we do not filter the low-rating reviews in this dataset.
+
+#### Final Dataset
+
+| Yahoo Music | Statistics |
+| ----------- | ---------- |
+| Users | 15,400 |
+| Items | 1,000 |
+| Interactions | 365,704 |
+| Train Interactions | 286,540 |
+| Test Interactions | 79,164 |
+| Density | 0.02375 |
+| $N$-core | 10 |
+| Rating | $-$ |
+
+#### Source
+
+We collect the Yahoo Music dataset from the implementation of the paper: [Distributionally Robust Graph-based Recommendation System](https://arxiv.org/abs/2402.12994).
+
+The original dataset can be accessed from the Yahoo! Webscope program: [R1 - Yahoo! Music User Ratings of Musical Artists, version 1.0 (423 MB)](https://webscope.sandbox.yahoo.com/catalog.php?datatype=r).
 
 ------
 

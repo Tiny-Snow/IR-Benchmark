@@ -476,10 +476,7 @@ def setup_optim_parser() -> argparse.ArgumentParser:
     ### SLatK
     ```
     itemrec ... optim ... SLatK --neg_num NEG_NUM --tau TAU --tau_beta TAU_BETA 
-    --k K --lambda_topk LAMBDA_TOPK --lr_quantile LR_QUANTILE 
-    --epoch_quantile EPOCH_QUANTILE --init_beta INIT_BETA
-    --slatk_start_epoch SLATK_START_EPOCH --weight_sigma WEIGHT_SIGMA
-    [--alternative] ...
+    --k K --epoch_quantile EPOCH_QUANTILE ...
     ```
     where
     - `--neg_num` (int, optional, default=1000)
@@ -490,20 +487,8 @@ def setup_optim_parser() -> argparse.ArgumentParser:
         The temperature for the softmax weights.
     - `--k` (int, optional, default=20)
         the Top-$K$ value.
-    - `--lambda_topk` (float, optional, default=1.0)
-        The weight of the penalty term.
-    - `--lr_quantile` (float, optional, default=0.001)
-        The learning rate for the quantile regression.
     - `--epoch_quantile` (int, optional, default=20)
         The epoch interval for the quantile regression.
-    - `--init_beta` (float, optional, default=0.0)
-        The initial value of the beta parameter (Top-$K$ score threshold).
-    - `--slatk_start_epoch` (int, optional, default=0)
-        The epoch to start the SLatK training.
-    - `--weight_sigma` (str, optional, default="exp")
-        The weight sigma function for the SLatK model.
-    - `--alternative` (bool, optional, default=False)
-        Whether to use the alternative training strategy.
 
     ### Softmax
     ```
@@ -757,45 +742,10 @@ def setup_optim_parser() -> argparse.ArgumentParser:
         help="The Top-K value.",
     )
     slatk_parser.add_argument(
-        "--lambda_topk",
-        type=float,
-        default=1.0,
-        help="The weight of the penalty term.",
-    )
-    slatk_parser.add_argument(
-        "--lr_quantile",
-        type=float,
-        default=0.001,
-        help="The learning rate for the quantile regression.",
-    )
-    slatk_parser.add_argument(
         "--epoch_quantile",
         type=int,
         default=20,
         help="The epoch interval for the quantile regression.",
-    )
-    slatk_parser.add_argument(
-        "--init_beta",
-        type=float,
-        default=0.0,
-        help="The initial value of the beta parameter (Top-K score threshold).",
-    )
-    slatk_parser.add_argument(
-        "--slatk_start_epoch",
-        type=int,
-        default=0,
-        help="The epoch to start the SLatK training.",
-    )
-    slatk_parser.add_argument(
-        "--weight_sigma",
-        type=str,
-        default="exp",
-        help="The weight sigma function for the SLatK model.",
-    )
-    slatk_parser.add_argument(
-        "--alternative",
-        action="store_true",
-        help="Whether to use the alternative training strategy.",
     )
     # optim: Softmax
     softmax_parser = optim_subparsers.add_parser(

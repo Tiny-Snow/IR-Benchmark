@@ -6,7 +6,10 @@
 # Description:
 #  This module provides the SL@K (Top-K Softmax Loss) Optimizer for ItemRec.
 #  SL@K is a NDCG@K oriented loss function for item recommendation.
-#  - TODO: add my paper here.
+#  TODO: update the paper after publication.
+#  - Yang, W., Chen, J., Zhang, S., Wu, P., Feng, Y., Chen, C., Wang, C.,
+#   Towards Optimizing Top-$K$ Ranking Metrics in Recommender Systems.
+#   In Submission.
 # -------------------------------------------------------------------
 
 # import modules ----------------------------------------------------
@@ -47,72 +50,42 @@ class SLatKOptimizer(IROptimizer):
     The SL@K loss function is defined as:
 
     $$
-    \mathcal{L}_{\mathrm{SL}@K}(u) = \mathbb{E}_{i \in \mathcal{P}_u} \left[ \frac{\sigma(f_\beta(u, i; K))}{\sum_{i' \in \mathcal{P}_u} \sigma(f_\beta(u, i'; K))} \log \left(\sum_{j \in \mathcal{I}} \sigma(d_{uij})\right) \right] - \lambda \log \sum_{i \in \mathcal{P}_u} \sigma(f_\beta(u, i; K))
+    \mathcal{L}_{\text{SL@}K}(u) = \sum_{i \in \mathcal{P}_u} \sigma_w(s_{ui} - \beta_{u}^{K}) \cdot \log \left( \displaystyle\sum_{j \in \mathcal{I}} \sigma_d(d_{uij}) \right)
     $$
 
     where 
-    - $\mathcal{I}$ is the set of all items ;
-    - $\mathcal{P}_u$ is the set of positive items for user $u$ ;
-    - $f(u, i)$ is the score of user $u$ on item $i$ ; 
-    - $d_{uij} = f(u, j) - f(u, i)$ for positive item $i$ and negative item $j$ ; 
-    - $\beta(u; K)$ is the score threshold of the top-$K$ positive items for user $u$ ; 
-    - $f_\beta(u, i; K) = f(u, i) - \beta(u; K)$ ;
-    - $\lambda$ is the weighting hyper-parameter for the penalty term ;
-    - $\sigma$ is a surrogate activation for $\mathbb{I}(\cdot \geq 0)$, e.g. 
-        $\sigma(x) = \exp(x / \tau)$, where $\tau$ is the temperature parameter.
-
-    In SL@K loss, $w(u, i; K) := \frac{\sigma(f_\beta(u, i; K))}{\sum_{i' \in \mathcal{P}_u} \sigma(f_\beta(u, i'; K))}$ 
-    can be viewed as the weight of the original softmax loss for positive item $i$.
-    During training, we will sample all the positive items $i$ to make sure that 
-    $\sum_i w(u, i; K) = 1$.
-
-    In SL@K loss, $R(u; K) := -\log \sum_{i \in \mathcal{P}_u} \sigma(f_\beta(u, i; K))$
-    can be viewed as the penalty term, which is a surrogate for the Top-$K$ hits, forcing 
-    the model to increase the number of top-$K$ positive items. During training, the penalty
-    or regularization term $R(u; K)$ will be calculated for each sample $(u, i)$ in the batch.
-
-    Therefore, SL@K loss can be simplified as:
-
-    $$
-    \mathcal{L}_{\mathrm{SL}@K}(u) = \mathbb{E}_{i \in \mathcal{P}_u} \left[ w(u, i; K) \cdot \log \left(\sum_{j \in \mathcal{I}} \sigma(d_{uij})\right) \right] + \lambda R(u; K)
-    $$
-
-    In practice, we omit the denominator in the weight $w(u, i; K)$, and at the same the
-    penalty term $R(u; K)$ is also omitted. Therefore, the SL@K loss can be calculated as:
-
-    $$
-    \mathcal{L}_{\mathrm{SL}@K}(u) = \mathbb{E}_{i \in \mathcal{P}_u} \left[ \sigma(f_\beta(u, i; K)) \log \left(\sum_{j \in \mathcal{I}} \sigma(d_{uij})\right) \right]
-    $$
+    - $\mathcal{I}$ is the set of all items;
+    - $\mathcal{P}_u$ is the set of positive items for user $u$;
+    - $s_{ui}$ is the score of user $u$ on item $i$; 
+    - $d_{uij} = f(u, j) - f(u, i)$ for positive item $i$ and negative item $j$; 
+    - $\beta_{u}^{K}$ is the score quantile of the top-$K$ positive items for user $u$; 
+    - $\sigma_w$ and $\sigma_d$ are the surrogate activations for $\mathbb{I}(\cdot \geq 0)$. 
+        Specifically, we set $\sigma_w = sigmoid(x / \tau_w)$ and $\sigma_d = sigmoid(x / \tau_d)$, 
+        where $\tau_w$ and $\tau_d$ are the temperature parameters.
     
-    ### Quantile Regression
+    ### Quantile Estimation or Regression
 
-    The Top-$K$ score threshold $\beta(u; K)$ can be learned by quantile regression.
-    Specifically, we can define the quantile regression loss as:
-
-    $$
-    \mathcal{L}_{\mathrm{quantile}}(u, i, \beta; t) = (1 - t)(f(u, i) - \beta(u; K))_{+} + t(\beta(u; K) - f(u, i))_{+}
-    $$
-
-    where $t = K / |\mathcal{I}$ is the Top-$K$ quantile, and $(x)_{+} = \max(x, 0)$ is
-    the ReLU function.
-
-    In practice, solving the quantile by sorting is also feasible, with the complexity of
-    $O(N \log K)$. We can estimate the Top-$K$ quantile by sorting all the positive items
-    and the sampled negative items ($\mathcal{P}_u + |\mathcal{N}| \gg K$).
+    In the implementation, we estimate the Top-$K$ score quantile $\beta_{u}^{K}$ by sorting.
+    Specifically, we use the Top-$K$ quantile of all positive items and $N$ sampled negative 
+    items to estimate the Top-$K$ score quantile $\beta_{u}^{K}$. 
+    
+    It's evident that the estimated quantile is biased, i.e., it is less or equal to the true
+    quantile. Indeed $\beta_{u}^{K}$ can also be learned by quantile regression with a smaller
+    error. However, we find that the sorting method is stable and effective enough in practice.
 
     ### Optimization
 
     The SL@K loss can be optimized by a two-stage training process:
-    1. Fix the Top-$K$ score threshold $\beta(u; K)$, and optimize the model parameters
-        by minimizing the SL@K loss.
-    2. Fix the model parameters, and optimize the Top-$K$ score threshold $\beta(u; K)$
-        by minimizing the quantile regression loss, or by sorting.
+    ```
+    for epoch in range(epoch_num):
+        Fix the Top-$K$ score quantile $\beta(u; K)$, and optimize the model parameters by minimizing the SL@K loss.
+        if epoch % epoch_quantile == 0:
+            Fix the model parameters, and update the Top-$K$ score quantile $\beta(u; K)$.
+    ```
     """
     def __init__(self, model: IRModel, lr: float = 0.1, weight_decay: float = 0.0,
         neg_num: int = 1000, tau: float = 1.0, tau_beta: float = 1.0, K: int = 20,
-        lambda_topk: float = 1.0, lr_quantile: float = 0.001, epoch_quantile: int = 20,
-        init_beta: float = 0.5, slatk_start_epoch: int = 0, weight_sigma: str = 'sigmoid',
-        alternative: bool = False, train_dict: List[List[int]] = None) -> None:
+        epoch_quantile: int = 20, train_dict: List[List[int]] = None) -> None:
         r"""
         ## Function
         The constructor of the SL@K optimizer.
@@ -132,20 +105,8 @@ class SLatKOptimizer(IROptimizer):
             the temperature parameter for the softmax weights
         K: int
             the Top-$K$ value
-        lambda_topk: float
-            the weighting hyper-parameter for the penalty term
-        lr_quantile: float
-            the learning rate for the quantile regression
         epoch_quantile: int
             the epoch interval for the quantile regression
-        init_beta: float
-            the initial value for the Top-$K$ score threshold
-        slatk_start_epoch: int
-            the epoch to start the SL@K loss optimization
-        weight_sigma: str
-            the surrogate activation function for the Heaviside step function
-        alternative: bool
-            whether to use the alternative optimization strategy (SL and SL@K)
         train_dict: List[List[int]]
             user -> positive items mapping
         """
@@ -157,39 +118,20 @@ class SLatKOptimizer(IROptimizer):
         self.tau = tau
         self.tau_beta = tau_beta
         self.K = K
-        self.lambda_topk = lambda_topk
-        self.lr_quantile = lr_quantile
         self.epoch_quantile = epoch_quantile
-        self.init_beta = init_beta
-        self.slatk_start_epoch = slatk_start_epoch
+        self.init_beta = 0.0
         assert train_dict is not None, 'train_dict, or positive items for each user, is required.'
-        self.alternative = alternative
         self.train_dict, self.mask, self.pos_item_num = self._construct_train_dict(train_dict)
         # model optimizer
-        self.optimizer_model = torch.optim.Adam(
+        self.optimizer = torch.optim.Adam(
             self.model.parameters(),
             lr=self.lr,
             weight_decay=self.weight_decay
         )
-        # quantile regression
-        self.beta = torch.full((model.user_size, 1), init_beta, \
-            dtype=torch.float32, device=model.device, requires_grad=True)
-        # NOTE: check if the beta is required to be updated by training
-        self.beta.requires_grad = False
-        self.optimizer_quantile = torch.optim.Adam(
-            [{'params': self.beta}],
-            lr=self.lr_quantile,
-        )
-        # weight sigma function
-        self.weight_sigma_func = weight_sigma
-        if weight_sigma == 'exp':           # NOTE: in exp, the beta will be eliminated
-            self.weight_sigma = lambda x : torch.exp(x / self.tau_beta)
-        elif weight_sigma == 'relu':        # NOTE: in relu, the truncated score f - beta may be negative
-            self.weight_sigma = lambda x : torch.pow(F.relu(x + 1), 1 / self.tau_beta)
-        elif weight_sigma == 'sigmoid':     
-            self.weight_sigma = lambda x : torch.sigmoid(x / self.tau_beta)
-        else:
-            raise ValueError(f'Invalid weight_sigma: {weight_sigma}')
+        # quantile estimation
+        self.beta = torch.full((model.user_size, 1), self.init_beta, dtype=torch.float32, device=model.device)
+        # weight sigma function  
+        self.weight_sigma = lambda x : torch.sigmoid(x / self.tau_beta)
 
     def _construct_train_dict(self, train_dict: List[List[int]], cutoff: bool = True) \
         -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -224,182 +166,7 @@ class SLatKOptimizer(IROptimizer):
         train_dict = torch.tensor(train_dict, dtype=torch.long, device=self.model.device)
         return train_dict, mask, pos_item_num
 
-    def update_quantile(self, epoch: int) -> bool:
-        r"""
-        ## Function
-        Whether to update the Top-$K$ score threshold in this epoch.
-
-        ## Arguments
-        epoch: int
-            the current epoch
-
-        ## Returns
-        flag: bool
-            whether to update the Top-$K$ score threshold
-        """
-        return epoch >= self.slatk_start_epoch and (epoch + 1) % self.epoch_quantile == 0
-    
-    def update_model_slatk(self, epoch: int) -> bool:
-        r"""
-        ## Function
-        Whether to update the model parameters by SL@K loss in this epoch.
-        If not, use the Softmax loss.
-
-        If alternative is False:
-            Always use the SL@K loss.
-        
-        If alternative is True:
-            For epoch >= slatk_start_epoch, optimize the model using SL@K loss 
-            by 5 epochs and then using the Softmax loss by 5 epochs, alternatively.
-
-        ## Arguments
-        epoch: int
-            the current epoch
-
-        ## Returns
-        flag: bool
-            whether to update the model parameters by SL@K loss
-        """
-        if epoch < self.slatk_start_epoch:
-            return False
-        if epoch == self.slatk_start_epoch:     # SL -> SL@K
-            self.optimizer_model = torch.optim.Adam(
-                self.model.parameters(),
-                lr=self.lr * 0.1,       # a smaller learning rate is better for SL@K
-                weight_decay=self.weight_decay
-            )
-        if not self.alternative:
-            return True
-        epoch = epoch - self.slatk_start_epoch
-        if epoch % 10 == 0:     # for SL@K
-            self.optimizer_model = torch.optim.Adam(
-                self.model.parameters(),
-                lr=self.lr * 0.1,       # a smaller learning rate is better for SL@K
-                weight_decay=self.weight_decay
-            )
-        elif epoch % 10 == 5:   # for Softmax
-            self.optimizer_model = torch.optim.Adam(
-                self.model.parameters(),
-                lr=self.lr,
-                weight_decay=self.weight_decay
-            )
-        return epoch % 10 < 5
-
     def cal_loss(self, batch: IRDataBatch) -> torch.Tensor:
-        r"""
-        ## Function
-        Calculate the SL@K loss for batch data.
-
-        ## Arguments
-        batch: IRDataBatch
-            the batch data, with shapes:
-            - user: torch.Tensor((B), dtype=torch.long)
-                the user ids
-            - pos_item: torch.Tensor((B), dtype=torch.long)
-                the positive item ids
-            - neg_items: torch.Tensor((B, N), dtype=torch.long)
-                the negative item ids
-        
-        ## Returns
-        loss: torch.Tensor
-            the SL@K loss
-        """
-        return self.cal_slatk_loss(batch)
-
-    def cal_sl_loss(self, batch: IRDataBatch) -> torch.Tensor:
-        r"""
-        ## Function
-        Calculate the Softmax loss for batch data.
-        
-        ## Arguments
-        batch: IRDataBatch
-            the batch data, with shapes:
-            - user: torch.Tensor((B), dtype=torch.long)
-                the user ids
-            - pos_item: torch.Tensor((B), dtype=torch.long)
-                the positive item ids
-            - neg_items: torch.Tensor((B, N), dtype=torch.long)
-                the negative item ids
-
-        ## Returns
-        loss: torch.Tensor
-            the Softmax loss
-        """
-        user_emb, item_emb, *addition = self.model.embed(norm=self.model.norm)
-        user = user_emb[batch.user]                                     # (B, emb_size)
-        pos_item = item_emb[batch.pos_item]                             # (B, emb_size)
-        neg_items = item_emb[batch.neg_items]                           # (B, N, emb_size)
-        pos_scores = F.cosine_similarity(user, pos_item)                # (B)
-        neg_scores = F.cosine_similarity(user.unsqueeze(1), neg_items, dim=2)   # (B, N)
-        d = neg_scores - pos_scores.unsqueeze(1)                        # (B, N)
-        loss = torch.logsumexp(d / self.tau, dim=1).mean()
-        loss += self.model.additional_loss(batch, user_emb, item_emb, *addition)
-        return loss
-
-    # NOTE: SL@K loss (normalized weight version)
-    def cal_slatk_loss_normalized(self, batch: IRDataBatch) -> torch.Tensor:
-        r"""
-        ## Function
-        Calculate the SL@K loss for batch data.
-
-        ## Arguments
-        batch: IRDataBatch
-            the batch data, with shapes:
-            - user: torch.Tensor((B), dtype=torch.long)
-                the user ids
-            - pos_item: torch.Tensor((B), dtype=torch.long)
-                the positive item ids
-            - neg_items: torch.Tensor((B, N), dtype=torch.long)
-                the negative item ids
-        
-        ## Returns
-        loss: torch.Tensor
-            the SL@K loss
-        """
-        # model embeddings & scores, calculate the softmax loss
-        user_emb, item_emb, *addition = self.model.embed(norm=self.model.norm)
-        user = user_emb[batch.user]                                 # (B, emb_size)
-        pos_item = item_emb[batch.pos_item]                         # (B, emb_size)
-        neg_items = item_emb[batch.neg_items]                       # (B, N, emb_size)
-        pos_scores = F.cosine_similarity(user, pos_item)            # (B)
-        neg_scores = F.cosine_similarity(user.unsqueeze(1), neg_items, dim=2)   # (B, N)
-        d = neg_scores - pos_scores.unsqueeze(1)                    # (B, N)
-        softmax_loss = torch.logsumexp(d / self.tau, dim=1)         # (B)
-        # SL@K weight
-        batch_beta = self.beta[batch.user]                          # (B, 1)
-        batch_pos_items = self.train_dict[batch.user]               # (B, max_len)
-        batch_mask = self.mask[batch.user]                          # (B, max_len)
-        batch_pos_item_emb = item_emb[batch_pos_items]              # (B, max_len, emb_size)
-        batch_pos_scores = F.cosine_similarity(user.unsqueeze(1), batch_pos_item_emb, dim=2)    # (B, max_len)
-        batch_pos_scores = batch_pos_scores - batch_beta            # (B, max_len)
-        if self.weight_sigma_func == 'exp':
-            # batch_pos_scores[~batch_mask] = -1e6                    # (B, max_len)
-            batch_pos_scores = torch.masked_fill(batch_pos_scores, ~batch_mask, -1e6)
-        elif self.weight_sigma_func == 'relu':
-            # batch_pos_scores[~batch_mask] = -1                      # (B, max_len)
-            batch_pos_scores = torch.masked_fill(batch_pos_scores, ~batch_mask, -1)
-        elif self.weight_sigma_func == 'sigmoid':
-            # batch_pos_scores[~batch_mask] = -1e6                    # (B, max_len)
-            batch_pos_scores = torch.masked_fill(batch_pos_scores, ~batch_mask, -1e6)
-        # sum weight
-        # batch_pos_scores = self.weight_sigma(batch_pos_scores).mean(dim=1)   # (B)
-        # batch_pos_item_num = self.pos_item_num[batch.user]          # (B)
-        # batch_pos_scores = batch_pos_scores * batch_pos_item_num    # (B), correct the sum
-        # mean weight
-        batch_pos_scores = self.weight_sigma(batch_pos_scores).sum(dim=1)   # (B)
-        batch_pos_item_num = self.pos_item_num[batch.user]          # (B)
-        batch_pos_scores = batch_pos_scores / batch_pos_item_num    # (B), correct the mean
-        # weights = self.weight_sigma(pos_scores - batch_beta.squeeze(1)) / batch_pos_scores # (B)
-        weights = self.weight_sigma(pos_scores - batch_beta.squeeze(1))
-        # penalty term
-        penalty = torch.log(batch_pos_scores)                       # (B)
-        # SL@K loss
-        loss = (weights * softmax_loss).mean() - self.lambda_topk * penalty.mean()
-        loss += self.model.additional_loss(batch, user_emb, item_emb, *addition)
-        return loss
-    
-    # NOTE: SL@K loss (not-normalized weight version)
-    def cal_slatk_loss(self, batch: IRDataBatch) -> torch.Tensor:
         r"""
         ## Function
         Calculate the SL@K loss for batch data.
@@ -435,84 +202,6 @@ class SLatKOptimizer(IROptimizer):
         loss += self.model.additional_loss(batch, user_emb, item_emb, *addition)
         return loss
 
-    # NOTE: quantile loss (single positive item version)
-    def cal_quantile_loss(self, batch: IRDataBatch) -> torch.Tensor:
-        r"""
-        ## Function
-        Calculate the quantile regression loss for batch data.
-
-        ## Arguments
-        batch: IRDataBatch
-            the batch data, with shapes:
-            - user: torch.Tensor((B), dtype=torch.long)
-                the user ids
-            - pos_item: torch.Tensor((B), dtype=torch.long)
-                the positive item ids
-            - neg_items: torch.Tensor((B, N), dtype=torch.long)
-                the negative item ids
-        
-        ## Returns
-        loss: torch.Tensor
-            the quantile regression loss
-        """
-        # model embeddings & scores
-        user_emb, item_emb, *addition = self.model.embed(norm=self.model.norm)
-        user = user_emb[batch.user]                                 # (B, emb_size)
-        pos_item = item_emb[batch.pos_item]                         # (B, emb_size)
-        neg_items = item_emb[batch.neg_items]                       # (B, N, emb_size)
-        # quantile regression loss
-        pos_scores = F.cosine_similarity(user, pos_item)            # (B)
-        neg_scores = F.cosine_similarity(user.unsqueeze(1), neg_items, dim=2)   # (B, N)
-        scores = torch.cat([pos_scores.unsqueeze(1), neg_scores], dim=1)   # (B, N + 1)
-        batch_beta = self.beta[batch.user]                          # (B, 1)
-        scores = scores - batch_beta                                # (B, N + 1)
-        t = self.K / (self.neg_num + self.K)                        # NOTE: t based on negative sampling
-        loss = (1 - t) * F.relu(scores).mean() + t * F.relu(-scores).mean()
-        return loss
-
-    # NOTE: quantile loss (full positive items version)
-    def cal_quantile_loss_full(self, batch: IRDataBatch) -> torch.Tensor:
-        r"""
-        ## Function
-        Calculate the quantile regression loss for batch data.
-
-        ## Arguments
-        batch: IRDataBatch
-            the batch data, with shapes:
-            - user: torch.Tensor((B), dtype=torch.long)
-                the user ids
-            - pos_item: torch.Tensor((B), dtype=torch.long)
-                the positive item ids
-            - neg_items: torch.Tensor((B, N), dtype=torch.long)
-                the negative item ids
-        
-        ## Returns
-        loss: torch.Tensor
-            the quantile regression loss
-        """
-        # model embeddings & scores
-        user_emb, item_emb, *addition = self.model.embed(norm=self.model.norm)
-        user = user_emb[batch.user]                                 # (B, emb_size)
-        batch_pos_items = self.train_dict[batch.user]               # (B, max_len)
-        pos_items = item_emb[batch_pos_items]                       # (B, max_len, emb_size)
-        neg_items = item_emb[batch.neg_items]                       # (B, N, emb_size)
-        # quantile regression loss
-        pos_size, neg_size = pos_items.size(1), neg_items.size(1)
-        t = self.K / (pos_size + neg_size)      # NOTE: t based on negative sampling
-        batch_beta = self.beta[batch.user]                          # (B, 1)
-        pos_scores = F.cosine_similarity(user.unsqueeze(1), pos_items, dim=2)   # (B, max_len)
-        pos_scores = pos_scores - batch_beta                        # (B, max_len)
-        batch_mask = self.mask[batch.user]                          # (B, max_len)
-        pos_scores_mask = pos_scores
-        pos_scores_mask[~batch_mask] = 0
-        pos_loss = (1 - t) * F.relu(pos_scores_mask).mean() + t * F.relu(-pos_scores_mask).mean()
-        neg_scores = F.cosine_similarity(user.unsqueeze(1), neg_items, dim=2)   # (B, N)
-        neg_scores = neg_scores - batch_beta                        # (B, N)
-        neg_loss = (1 - t) * F.relu(neg_scores).mean() + t * F.relu(-neg_scores).mean()
-        loss = pos_loss + neg_loss
-        return loss
-
-    # NOTE: directly calculate the quantile by sorting
     def cal_quantile(self, batch: IRDataBatch) -> None:
         r"""
         ## Function
@@ -548,107 +237,6 @@ class SLatKOptimizer(IROptimizer):
             beta = torch.topk(scores, self.K, dim=1)[0][:, -1]          # (B)
             self.beta[batch.user] = beta.unsqueeze(1)
 
-    # NOTE: SL/SL@K alternative optimization
-    def step_alternative(self, batch: IRDataBatch, epoch: int) -> float:
-        r"""
-        ## Function
-        Perform a single optimization step for batch data.
-
-        ## Arguments
-        batch: IRDataBatch
-            the batch data
-        epoch: int
-            the current epoch (from 0 to epoch_num - 1)
-
-        ## Returns
-        The loss of the batch data.
-        """
-        if not self.update_quantile(epoch):     # update model
-            for param in self.model.parameters():
-                param.requires_grad = True
-            self.beta.requires_grad = False
-            self.optimizer_model.zero_grad()
-            if self.update_model_slatk(epoch):
-                loss = self.cal_slatk_loss(batch)
-            else:
-                loss = self.cal_sl_loss(batch)
-            loss.backward()
-            self.optimizer_model.step()
-        else:                                   # update quantile
-            for param in self.model.parameters():
-                param.requires_grad = False
-            self.beta.requires_grad = True
-            self.optimizer_quantile.zero_grad()
-            loss = self.cal_quantile_loss(batch)
-            loss.backward()
-            self.optimizer_quantile.step()
-        return loss.item()
-
-    # NOTE: SL@K quantile regression optimization
-    def step_regression(self, batch: IRDataBatch, epoch: int) -> float:
-        r"""
-        ## Function
-        Perform a single optimization step for batch data.
-
-        ## Arguments
-        batch: IRDataBatch
-            the batch data
-        epoch: int
-            the current epoch (from 0 to epoch_num - 1)
-
-        ## Returns
-        The loss of the batch data.
-        """
-        # update model
-        for param in self.model.parameters():
-            param.requires_grad = True
-        self.beta.requires_grad = False
-        self.optimizer_model.zero_grad()
-        if self.update_model_slatk(epoch):
-            model_loss = self.cal_slatk_loss(batch)
-        else:
-            model_loss = self.cal_sl_loss(batch)
-        model_loss.backward()
-        self.optimizer_model.step()
-        # update quantile (by quantile loss)
-        for param in self.model.parameters():
-            param.requires_grad = False
-        self.beta.requires_grad = True
-        if self.update_quantile(epoch):
-            self.optimizer_quantile.zero_grad()
-            quantile_loss = self.cal_quantile_loss(batch)
-            quantile_loss.backward()
-            self.optimizer_quantile.step()
-        return model_loss.item()
-    
-    # NOTE: SL@K quantile sorting optimization
-    def step_sorting(self, batch: IRDataBatch, epoch: int) -> float:
-        r"""
-        ## Function
-        Perform a single optimization step for batch data.
-
-        ## Arguments
-        batch: IRDataBatch
-            the batch data
-        epoch: int
-            the current epoch (from 0 to epoch_num - 1)
-
-        ## Returns
-        The loss of the batch data.
-        """
-        # update model
-        self.optimizer_model.zero_grad()
-        if self.update_model_slatk(epoch):
-            model_loss = self.cal_slatk_loss(batch)
-        else:
-            model_loss = self.cal_sl_loss(batch)
-        model_loss.backward()
-        self.optimizer_model.step()
-        # update quantile (by sorting)
-        if self.update_quantile(epoch):
-            self.cal_quantile(batch)
-        return model_loss.item()
-
     def step(self, batch: IRDataBatch, epoch: int) -> float:
         r"""
         ## Function
@@ -663,29 +251,13 @@ class SLatKOptimizer(IROptimizer):
         ## Returns
         The loss of the batch data.
         """
-        # SL/SL@K alternative optimization
-        # return self.step_alternative(batch, epoch)
-        # SL@K quantile regression optimization
-        # return self.step_regression(batch, epoch)
-        # SL@K quantile sorting optimization
-        return self.step_sorting(batch, epoch)
+        # update model
+        self.optimizer.zero_grad()
+        model_loss = self.cal_loss(batch)
+        model_loss.backward()
+        self.optimizer.step()
+        # update quantile (by sorting)
+        if (epoch + 1) % self.epoch_quantile == 0:
+            self.cal_quantile(batch)
+        return model_loss.cpu().item()
 
-    def zero_grad(self) -> None:
-        r"""
-        ## Function
-        Zero the gradients of the optimizer.
-        """
-        self.optimizer_model.zero_grad()
-        self.optimizer_quantile.zero_grad()
-
-    def beta_info(self) -> str:
-        r"""
-        ## Function
-        Get the information of the Top-$K$ score threshold $\beta$.
-        
-        ## Returns
-        info: str
-            the information of $\beta$
-        """
-        return f'Beta: mean: {self.beta.mean().item():.4f}, std: {self.beta.std().item():.4f}, '\
-            f'range: [{self.beta.min().item():.4f}, {self.beta.max().item():.4f}]'

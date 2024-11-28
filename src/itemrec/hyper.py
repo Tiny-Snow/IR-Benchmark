@@ -81,11 +81,7 @@ search_space_dict = {
         'tau': {'_type': 'choice', '_value': [0.01, 0.05, 0.1, 0.2, 0.5]},      # NOTE: using the optimal value of Softmax
         'tau_beta': {'_type': 'quniform', '_value': [0.5, 3, 0.25]},
         'k': {'_type': 'choice', '_value': [5, 20, 50]},
-        'lambda_topk': {'_type': 'choice', '_value': [0]},
-        'lr_quantile': {'_type': 'choice', '_value': [0.001]},
         'epoch_quantile': {'_type': 'choice', '_value': [5, 20]},
-        'init_beta': {'_type': 'choice', '_value': [0.0]},
-        'slatk_start_epoch': {'_type': 'choice', '_value': [0]},
     },
     'Softmax': {
         'lr': {'_type': 'choice', '_value': [0.1, 0.01, 0.001]},

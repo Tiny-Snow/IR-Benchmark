@@ -211,16 +211,10 @@ def set_experiments(args: Namespace) -> None:
     elif args.optim == 'SLatK':
         optimizer = SLatKOptimizer(model, args.lr, args.weight_decay,
             neg_num=args.neg_num, tau=args.tau, tau_beta=args.tau_beta, K=args.k, 
-            lambda_topk=args.lambda_topk, lr_quantile=args.lr_quantile, 
-            epoch_quantile=args.epoch_quantile, init_beta=args.init_beta,
-            slatk_start_epoch=args.slatk_start_epoch, weight_sigma=args.weight_sigma,
-            alternative=args.alternative, train_dict=dataset.train_dict)
+            epoch_quantile=args.epoch_quantile, train_dict=dataset.train_dict)
         logger.info(f"Built SLatKOptimizer(lr={args.lr}, weight_decay={args.weight_decay}, " \
             f"neg_num={args.neg_num}, tau={args.tau}, tau_beta={args.tau_beta}, " \
-            f"K={args.k}, lambda_topk={args.lambda_topk}, " \
-            f"lr_quantile={args.lr_quantile}, epoch_quantile={args.epoch_quantile}, " \
-            f"init_beta={args.init_beta}, slatk_start_epoch={args.slatk_start_epoch}, " \
-            f"weight_sigma={args.weight_sigma}, alternative={args.alternative}).")
+            f"K={args.k}, epoch_quantile={args.epoch_quantile}).")
     elif args.optim == 'Softmax':
         optimizer = SoftmaxOptimizer(model, args.lr, args.weight_decay, 
             neg_num=args.neg_num, tau=args.tau)
@@ -369,10 +363,7 @@ def get_info(args: Namespace) -> str:
         info += f"_tau({args.tau})_tau_star({args.tau_star})"
     elif args.optim == 'SLatK':
         info += f"_neg({args.neg_num})_tau({args.tau})_tau_beta({args.tau_beta})" \
-            f"_K({args.k})_lambda_topk({args.lambda_topk})" \
-            f"_lr_quantile({args.lr_quantile})_epoch_quantile({args.epoch_quantile})" \
-            f"_init_beta({args.init_beta})_slatk_start_epoch({args.slatk_start_epoch})" \
-            f"_weight_sigma({args.weight_sigma})"
+            f"_K({args.k})_epoch_quantile({args.epoch_quantile})"
     elif args.optim == 'Softmax':
         info += f"_neg({args.neg_num})_tau({args.tau})"
     else:

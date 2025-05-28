@@ -9,6 +9,9 @@
 #  - Yang, W., Chen, J., Zhang, S., Wu, P., Sun, Y., Feng, Y., Chen, C., Wang, C.,
 #   Breaking the Top-$K$ Barrier: Advancing Top-$K$ Ranking Metrics Optimization in Recommender Systems.
 #   31st SIGKDD Conference on Knowledge Discovery and Data Mining - Research Track.
+#  - Yuan, Z., Wu, Y., Qiu, Z. H., Du, X., Zhang, L., Zhou, D., & Yang, T. (2022, June). 
+#   Provable stochastic optimization for global contrastive learning: Small batch does not harm performance. 
+#   In International Conference on Machine Learning (pp. 25760-25782). PMLR.
 # -------------------------------------------------------------------
 
 # import modules ----------------------------------------------------
@@ -31,63 +34,27 @@ from ..model import IRModel
 
 # public functions --------------------------------------------------
 __all__ = [
-    'SLatKOptimizer',
+    'SogSLatKOptimizer',
 ]
 
-# SLatKOptimizer ----------------------------------------------------
-class SLatKOptimizer(IROptimizer):
+# SogSLatKOptimizer -------------------------------------------------
+class SogSLatKOptimizer(IROptimizer):
     r"""
     ## Class
-    The SL@K Optimizer for ItemRec.
+    The SogSL@K Optimizer for ItemRec.
     SL@K is a NDCG@K surrogate loss function for item recommendation.
-    The SL@K optimizer is inherited from IROptimizer.
+    SogSL@K utilizes the Compositional Optimization algorithm to the SL@K loss.
 
     ## Algorithms
 
-    ### SL@K Loss
-
-    The SL@K loss function is defined as:
-
-    $$
-    \mathcal{L}_{\text{SL@}K}(u) = \sum_{i \in \mathcal{P}_u} \sigma_w(s_{ui} - \beta_{u}^{K}) \cdot \log \left( \displaystyle\sum_{j \in \mathcal{I}} \sigma_d(d_{uij}) \right)
-    $$
-
-    where 
-    - $\mathcal{I}$ is the set of all items;
-    - $\mathcal{P}_u$ is the set of positive items for user $u$;
-    - $s_{ui}$ is the score of user $u$ on item $i$; 
-    - $d_{uij} = f(u, j) - f(u, i)$ for positive item $i$ and negative item $j$; 
-    - $\beta_{u}^{K}$ is the score quantile of the top-$K$ positive items for user $u$; 
-    - $\sigma_w$ and $\sigma_d$ are the surrogate activations for $\mathbb{I}(\cdot \geq 0)$. 
-        Specifically, we set $\sigma_w = sigmoid(x / \tau_w)$ and $\sigma_d = sigmoid(x / \tau_d)$, 
-        where $\tau_w$ and $\tau_d$ are the temperature parameters.
-    
-    ### Quantile Estimation or Regression
-
-    In the implementation, we estimate the Top-$K$ score quantile $\beta_{u}^{K}$ by sorting.
-    Specifically, we use the Top-$K$ quantile of all positive items and $N$ sampled negative 
-    items to estimate the Top-$K$ score quantile $\beta_{u}^{K}$. 
-    
-    It's evident that the estimated quantile is biased, i.e., it is less or equal to the true
-    quantile. Indeed $\beta_{u}^{K}$ can also be learned by quantile regression with a smaller
-    error. However, we find that the sorting method is stable and effective enough in practice.
-
-    ### Optimization
-
-    The SL@K loss can be optimized by a two-stage training process:
-    ```
-    for epoch in range(epoch_num):
-        Fix the Top-$K$ score quantile $\beta(u; K)$, and optimize the model parameters by minimizing the SL@K loss.
-        if epoch % epoch_quantile == 0:
-            Fix the model parameters, and update the Top-$K$ score quantile $\beta(u; K)$.
-    ```
+    See `.optim_SLatK.py` and `.optim_SogCLR.py` for the detailed algorithms.
     
     ## References
     TODO: Add the reference
     """
     def __init__(self, model: IRModel, lr: float = 0.1, weight_decay: float = 0.0,
         neg_num: int = 1000, tau: float = 1.0, tau_beta: float = 1.0, K: int = 20,
-        epoch_quantile: int = 20, train_dict: List[List[int]] = None) -> None:
+        epoch_quantile: int = 20, gamma_g: float = 0.9, train_dict: List[List[int]] = None) -> None:
         r"""
         ## Function
         The constructor of the SL@K optimizer.
@@ -109,10 +76,12 @@ class SLatKOptimizer(IROptimizer):
             the Top-$K$ value
         epoch_quantile: int
             the epoch interval for the quantile regression
+        gamma_g: float
+            the hyperparameter for the moving average estimator
         train_dict: List[List[int]]
             user -> positive items mapping
         """
-        super(SLatKOptimizer, self).__init__()
+        super(SogSLatKOptimizer, self).__init__()
         self.model = model
         self.lr = lr
         self.weight_decay = weight_decay
@@ -134,6 +103,9 @@ class SLatKOptimizer(IROptimizer):
         self.beta = torch.full((model.user_size, 1), self.init_beta, dtype=torch.float32, device=model.device)
         # weight sigma function  
         self.weight_sigma = lambda x : torch.sigmoid(x / self.tau_beta)
+        # SogCLR moving average
+        self.gamma_g = gamma_g
+        self.g = torch.zeros((model.user_size), dtype=torch.float32).to(model.device)
 
     def _construct_train_dict(self, train_dict: List[List[int]], cutoff: bool = True) \
         -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -194,13 +166,17 @@ class SLatKOptimizer(IROptimizer):
         neg_items = item_emb[batch.neg_items]                       # (B, N, emb_size)
         pos_scores = F.cosine_similarity(user, pos_item)            # (B)
         neg_scores = F.cosine_similarity(user.unsqueeze(1), neg_items, dim=2)   # (B, N)
-        d = neg_scores - pos_scores.unsqueeze(1)                    # (B, N)
-        softmax_loss = torch.logsumexp(d / self.tau, dim=1)         # (B)
+        g_hat = torch.exp(neg_scores / self.tau).mean(dim=1)        # (B)
+        g = self.g[batch.user]                                      # (B)
+        g = torch.where(g == 0, g_hat.detach(), g)                  # (B)
+        g = (1 - self.gamma_g) * g + self.gamma_g * g_hat.detach()  # (B)
+        self.g[batch.user] = g
         # SL@K weight
         batch_beta = self.beta[batch.user]                          # (B, 1)
         weights = self.weight_sigma(pos_scores - batch_beta.squeeze(1))         # (B)
+        weights = (weights / weights.mean()).detach()               # (B)
         # SL@K loss
-        loss = (weights * softmax_loss).mean()
+        loss = (weights * -pos_scores / self.tau).mean() + (g_hat / g).mean()
         loss += self.model.additional_loss(batch, user_emb, item_emb, *addition)
         return loss
 

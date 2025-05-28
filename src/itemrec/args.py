@@ -134,12 +134,6 @@ def setup_model_parser() -> argparse.ArgumentParser:
         The number of epochs for training the model.
     - `MODEL_NAME` (str, required)
         The name of the model, including `MF`, `LightGCN`, `NGCF`, etc.
-    
-    ### MF
-    ```
-    itemrec ... model ... MF ...
-    ```
-    No additional arguments required.
 
     ### LightGCN
     ```
@@ -148,6 +142,54 @@ def setup_model_parser() -> argparse.ArgumentParser:
     where
     - `--num_layers` (int, optional, default=3)
         The number of layers in the LightGCN model.
+        
+    ## LightGCN++
+    ```
+    itemrec ... model ... LightGCNPP --num_layers ...
+    ```
+    where
+    - `--num_layers` (int, optional, default=3)
+        The number of layers in the LightGCN++ model.
+        Other hyper-parameters are fixed as the original paper.
+
+    ### MF
+    ```
+    itemrec ... model ... MF ...
+    ```
+    No additional arguments required.
+
+    ### NCF
+    ```
+    itemrec ... model ... NCF --layers LAYERS ...
+    ```
+    where
+    - `--layers` (List[int], optional, default=[32, 16, 8, 64])
+        The sizes of hidden layers, the last layer = emb_size.
+    
+    ### SimGCL
+    ```
+    itemrec ... model ... SimGCL --num_layers NUM_LAYERS --contrast_weight CONTRAST_WEIGHT
+    --noise_eps NOISE_EPS --InfoNCE_tau InfoNCE_tau ...
+    ```
+    where
+    - `--num_layers` (int, optional, default=3)
+        The number of layers in the SimGCL model.
+    - `--contrast_weight` (float, optional, default=0.5)
+        The weight of the contrastive loss.
+    - `--noise_eps` (float, optional, default=0.1)
+        The noise epsilon for the contrastive loss.
+    - `--InfoNCE_tau` (float, optional, default=0.1)
+        The temperature for the InfoNCE loss.
+    
+    ### SimpleX
+    ```
+    itemrec ... model ... SimpleX --history_len HISTORY_LEN --history_weight HISTORY_WEIGHT ...
+    ```
+    where
+    - `--history_len` (int, optional, default=50)
+        The maximum number of historical items for each user.
+    - `--history_weight` (float, optional, default=0.5)
+        The weight of historical items in the user embedding.
 
     ### XSimGCL
     ```
@@ -165,24 +207,6 @@ def setup_model_parser() -> argparse.ArgumentParser:
         The noise epsilon for the contrastive loss.
     - `--InfoNCE_tau` (float, optional, default=0.1)
         The temperature for the InfoNCE loss.
-    
-    ### NCF
-    ```
-    itemrec ... model ... NCF --layers LAYERS ...
-    ```
-    where
-    - `--layers` (List[int], optional, default=[32, 16, 8, 64])
-        The sizes of hidden layers, the last layer = emb_size.
-
-    ### SimpleX
-    ```
-    itemrec ... model ... SimpleX --history_len HISTORY_LEN --history_weight HISTORY_WEIGHT ...
-    ```
-    where
-    - `--history_len` (int, optional, default=50)
-        The maximum number of historical items for each user.
-    - `--history_weight` (float, optional, default=0.5)
-        The weight of historical items in the user embedding.
 
     ## Returns
     - parser: argparse.ArgumentParser
@@ -214,12 +238,6 @@ def setup_model_parser() -> argparse.ArgumentParser:
         description="The sub-commands for the model sub-command.",
         dest="model",
     )
-    # model: MF
-    mf_parser = model_subparsers.add_parser(
-        "MF",
-        help="The MF model for ItemRec.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
     # model: LightGCN
     lightgcn_parser = model_subparsers.add_parser(
         "LightGCN",
@@ -231,6 +249,84 @@ def setup_model_parser() -> argparse.ArgumentParser:
         type=int,
         default=3,
         help="The number of layers in the LightGCN model.",
+    )
+    # model: LightGCN++
+    lightgcnpp_parser = model_subparsers.add_parser(
+        "LightGCNPP",
+        help="The LightGCN++ model for ItemRec.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    lightgcnpp_parser.add_argument(
+        "--num_layers",
+        type=int,
+        default=3,
+        help="The number of layers in the LightGCN++ model.",
+    )
+    # model: MF
+    mf_parser = model_subparsers.add_parser(
+        "MF",
+        help="The MF model for ItemRec.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    # model: NCF
+    ncf_parser = model_subparsers.add_parser(
+        "NCF",
+        help="The NCF model for ItemRec.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    ncf_parser.add_argument(
+        "--layers",
+        type=str,
+        default="[32, 16, 8, 64]",
+        help="The sizes of hidden layers, the last layer = emb_size.",
+    )
+    # model: SimGCL
+    simgcl_parser = model_subparsers.add_parser(
+        "SimGCL",
+        help="The SimGCL model for ItemRec.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    simgcl_parser.add_argument(
+        "--num_layers",
+        type=int,
+        default=3,
+        help="The number of layers in the SimGCL model.",
+    )
+    simgcl_parser.add_argument(
+        "--contrast_weight",
+        type=float,
+        default=0.5,
+        help="The weight of the contrastive loss.",
+    )
+    simgcl_parser.add_argument(
+        "--noise_eps",
+        type=float,
+        default=0.1,
+        help="The noise epsilon for the contrastive loss.",
+    )
+    simgcl_parser.add_argument(
+        "--InfoNCE_tau",
+        type=float,
+        default=0.1,
+        help="The temperature for the InfoNCE loss.",
+    )
+    # model: SimpleX
+    simplex_parser = model_subparsers.add_parser(
+        "SimpleX",
+        help="The SimpleX model for ItemRec.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    simplex_parser.add_argument(
+        "--history_len",
+        type=int,
+        default=50,
+        help="The maximum number of historical items for each user.",
+    )
+    simplex_parser.add_argument(
+        "--history_weight",
+        type=float,
+        default=0.5,
+        help="The weight of historical items in the user embedding.",
     )
     # model: XSimGCL
     xsimgcl_parser = model_subparsers.add_parser(
@@ -268,36 +364,6 @@ def setup_model_parser() -> argparse.ArgumentParser:
         default=0.1,
         help="The temperature for the InfoNCE loss.",
     )
-    # model: NCF
-    ncf_parser = model_subparsers.add_parser(
-        "NCF",
-        help="The NCF model for ItemRec.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    ncf_parser.add_argument(
-        "--layers",
-        type=str,
-        default="[32, 16, 8, 64]",
-        help="The sizes of hidden layers, the last layer = emb_size.",
-    )
-    # model: SimpleX
-    simplex_parser = model_subparsers.add_parser(
-        "SimpleX",
-        help="The SimpleX model for ItemRec.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    simplex_parser.add_argument(
-        "--history_len",
-        type=int,
-        default=50,
-        help="The maximum number of historical items for each user.",
-    )
-    simplex_parser.add_argument(
-        "--history_weight",
-        type=float,
-        default=0.5,
-        help="The weight of historical items in the user embedding.",
-    )
     return parser
 
 # dataset sub-parser ------------------------------------------------
@@ -309,7 +375,8 @@ def setup_dataset_parser() -> argparse.ArgumentParser:
     ## Args Parser
     The overall dataset sub-command is defined as the following:
     ```
-    itemrec ... dataset --data_path DATA_PATH --batch_size BATCH_SIZE --num_workers NUM_WORKERS [--no_valid] ...
+    itemrec ... dataset --data_path DATA_PATH --batch_size BATCH_SIZE --num_workers NUM_WORKERS [--no_valid] 
+        --sampler SAMPLER --epoch_sampler EPOCH_SAMPLER --fold FOLD ...
     ```
     where
     - `--data_path` (str, required)
@@ -323,6 +390,13 @@ def setup_dataset_parser() -> argparse.ArgumentParser:
         Whether to use the validation set.
         If true, the validation set will not be used, and the test set will be used
         for validation.
+    - `--sampler` (str, optional, default="uniform")
+        The sampler to sample negative items. Currently, we only support the following samplers:
+        - 'uniform': UniformSampler
+    - `--epoch_sampler` (int, optional, default=0)
+        The number of epochs to update the sampler.
+    - `--fold` (int, optional, default=1)
+        The fold number for cross-validation.
 
     ## Args
     - parser: argparse.ArgumentParser
@@ -354,6 +428,24 @@ def setup_dataset_parser() -> argparse.ArgumentParser:
         "--no_valid",
         action="store_true",
         help="Whether to use the validation set.",
+    )
+    parser.add_argument(
+        "--sampler",
+        type=str,
+        default="uniform",
+        help="The sampler to sample negative items.",
+    )
+    parser.add_argument(
+        "--epoch_sampler",
+        type=int,
+        default=0,
+        help="The number of epochs to update the sampler.",
+    )
+    parser.add_argument(
+        "--fold",
+        type=int,
+        default=1,
+        help="The fold number for cross-validation.",
     )
     return parser
 
@@ -499,6 +591,37 @@ def setup_optim_parser() -> argparse.ArgumentParser:
         The number of negative items for each user.
     - `--tau` (float, optional, default=1.0)
         The temperature for the softmax function.
+        
+    ### SogCLR
+    ```
+    itemrec ... optim ... SogCLR --neg_num NEG_NUM --tau TAU --gamma_g GAMMA_G
+    ```
+    where
+    - `--neg_num` (int, optional, default=1000)
+        The number of negative items for each user.
+    - `--tau` (float, optional, default=1.0)
+        The temperature parameter for the softmax function.
+    - `--gamma_g` (float, optional, default=0.9)
+        The hyperparameter for the moving average estimator.
+
+    ## SogSLatK
+    ```
+    itemrec ... optim ... SogSLatK --neg_num NEG_NUM --tau TAU --tau_beta TAU_BETA
+    --k K --epoch_quantile EPOCH_QUANTILE --gamma_g GAMMA_G ...
+    ```
+    where
+    - `--neg_num` (int, optional, default=1000)
+        The number of negative items for each user.
+    - `--tau` (float, optional, default=1.0)
+        The temperature for the softmax function.
+    - `--tau_beta` (float, optional, default=1.0)
+        The temperature for the softmax weights.
+    - `--k` (int, optional, default=20)
+        the Top-$K$ value.
+    - `--epoch_quantile` (int, optional, default=20)
+        The epoch interval for the quantile regression.
+    - `--gamma_g` (float, optional, default=0.9)
+        The hyperparameter for the moving average estimator.
 
     ## Returns
     - parser: argparse.ArgumentParser
@@ -572,6 +695,30 @@ def setup_optim_parser() -> argparse.ArgumentParser:
         type=int,
         default=1,
         help="The number of negative items for each user.",
+    )
+    # optim: BSL
+    bsl_parser = optim_subparsers.add_parser(
+        "BSL",
+        help="The BSL optimizer for ItemRec.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    bsl_parser.add_argument(
+        "--neg_num",
+        type=int,
+        default=1000,
+        help="The number of negative items for each user.",
+    )
+    bsl_parser.add_argument(
+        "--tau1",
+        type=float,
+        default=1.0,
+        help="The temperature parameter for the positive items.",
+    )
+    bsl_parser.add_argument(
+        "--tau2",
+        type=float,
+        default=1.0,
+        help="The temperature parameter for the negative items.",
     )
     # optim: GuidedRec
     guidedrec_parser = optim_subparsers.add_parser(
@@ -650,30 +797,6 @@ def setup_optim_parser() -> argparse.ArgumentParser:
         type=float,
         default=0.1,
         help="The beta parameter of LLPAUC.",
-    )
-    # optim: BSL
-    bsl_parser = optim_subparsers.add_parser(
-        "BSL",
-        help="The BSL optimizer for ItemRec.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    bsl_parser.add_argument(
-        "--neg_num",
-        type=int,
-        default=1000,
-        help="The number of negative items for each user.",
-    )
-    bsl_parser.add_argument(
-        "--tau1",
-        type=float,
-        default=1.0,
-        help="The temperature parameter for the positive items.",
-    )
-    bsl_parser.add_argument(
-        "--tau2",
-        type=float,
-        default=1.0,
-        help="The temperature parameter for the negative items.",
     )
     # optim: PSL
     psl_parser = optim_subparsers.add_parser(
@@ -764,6 +887,72 @@ def setup_optim_parser() -> argparse.ArgumentParser:
         type=float,
         default=1.0,
         help="The temperature for the softmax function.",
+    )
+    # optim: SogCLR
+    sogclr_parser = optim_subparsers.add_parser(
+        "SogCLR",
+        help="The SogCLR optimizer for ItemRec.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    sogclr_parser.add_argument(
+        "--neg_num",
+        type=int,
+        default=1000,
+        help="The number of negative items for each user.",
+    )
+    sogclr_parser.add_argument(
+        "--tau",
+        type=float,
+        default=1.0,
+        help="The temperature parameter for the softmax function.",
+    )
+    sogclr_parser.add_argument(
+        "--gamma_g",
+        type=float,
+        default=0.9,
+        help="The hyperparameter for the moving average estimator.",
+    )
+    # optim: SogSLatK
+    sogslatk_parser = optim_subparsers.add_parser(
+        "SogSLatK",
+        help="The SogSLatK optimizer for ItemRec.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    sogslatk_parser.add_argument(
+        "--neg_num",
+        type=int,
+        default=1000,
+        help="The number of negative items for each user.",
+    )
+    sogslatk_parser.add_argument(
+        "--tau",
+        type=float,
+        default=1.0,
+        help="The temperature for the softmax function.",
+    )
+    sogslatk_parser.add_argument(
+        "--tau_beta",
+        type=float,
+        default=1.0,
+        help="The temperature for the softmax weights.",
+    )
+    sogslatk_parser.add_argument(
+        "--k",
+        type=int,
+        default=20,
+        help="The Top-K value.",
+    )
+    sogslatk_parser.add_argument(
+        "--epoch_quantile",
+        type=int,
+        default=20,
+        help="The epoch interval for the quantile regression.",
+    )
+    sogslatk_parser.add_argument(
+        "--gamma_g",
+        type=float,
+        default=0.9,
+        help="The hyperparameter for the moving average estimator.",
     )
     return parser
 

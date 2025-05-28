@@ -97,7 +97,7 @@ class IRModel(nn.Module, ABC):
             and (item_size, emb_size). If you need to add additional loss,
             you can return the additional embeddings, etc.
         """
-        return NotImplemented
+        pass
     
     def scores(self, user: torch.Tensor) -> torch.Tensor:
         r"""

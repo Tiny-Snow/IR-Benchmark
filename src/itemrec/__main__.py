@@ -9,7 +9,6 @@
 import sys
 from .cli import main
 
-
 # main function -----------------------------------------------------
 if __name__ == '__main__':
     sys.exit(main())

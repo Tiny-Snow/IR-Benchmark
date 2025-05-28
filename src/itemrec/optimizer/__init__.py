@@ -16,6 +16,8 @@ from .optim_LambdaLoss import *
 from .optim_LambdaLossAtK import *
 from .optim_LLPAUC import *
 from .optim_PSL import *
-from .optim_Softmax import *
 from .optim_SLatK import *
+from .optim_Softmax import *
+from .optim_SogCLR import *
+from .optim_SogSLatK import *
 

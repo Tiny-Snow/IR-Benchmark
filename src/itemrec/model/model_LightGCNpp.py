@@ -2,14 +2,13 @@
 # ItemRec / Item Recommendation Benchmark
 # Copyright (C) 2024 Tiny Snow / Weiqin Yang @ Zhejiang University
 # -------------------------------------------------------------------
-# Module: Model - LightGCN
+# Module: Model - LightGCN++
 # Description:
-#  This module provides the LightGCN model for item recommendation.
+#  This module provides the LightGCN++ model for item recommendation.
 #  Reference:
-#  - Xiangnan He, Kuan Deng, Xiang Wang, Yan Li, YongDong Zhang, and Meng Wang. 2020. 
-#   LightGCN: Simplifying and Powering Graph Convolution Network for Recommendation. 
-#   In Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR '20). 
-#   Association for Computing Machinery, New York, NY, USA, 639-648. https://doi.org/10.1145/3397271.3401063
+#  - Lee, Geon, Kyungho Kim, and Kijung Shin. 
+#   "Revisiting LightGCN: Unexpected Inflexibility, Inconsistency, and A Remedy Towards Improved Recommendation." 
+#   Proceedings of the 18th ACM Conference on Recommender Systems. 2024.
 # -------------------------------------------------------------------
 
 # import modules ----------------------------------------------------
@@ -29,31 +28,31 @@ from .model_Base import IRModel
 
 # public functions --------------------------------------------------
 __all__ = [
-    'LightGCNModel',
+    'LightGCNPPModel',
 ]
 
-# LightGCN ----------------------------------------------------------
-class LightGCNModel(IRModel):
+# LightGCN++ --------------------------------------------------------
+class LightGCNPPModel(IRModel):
     r"""
     ## Class
-    The LightGCN model for ItemRec.
+    The LightGCN++ model for ItemRec.
     
     ## Methods
-    LightGCN overrides the following methods:
+    LightGCN++ overrides the following methods:
     - embed:
         Embed all the user and item ids to user and item embeddings.
 
     ## References
-    - Xiangnan He, Kuan Deng, Xiang Wang, Yan Li, YongDong Zhang, and Meng Wang. 2020.
-        LightGCN: Simplifying and Powering Graph Convolution Network for Recommendation.
-        In Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR '20).
-        Association for Computing Machinery, New York, NY, USA, 639-648. https://doi.org/10.1145/3397271.3401063
+    - Lee, Geon, Kyungho Kim, and Kijung Shin.
+        "Revisiting LightGCN: Unexpected Inflexibility, Inconsistency, and A Remedy Towards Improved Recommendation."
+        Proceedings of the 18th ACM Conference on Recommender Systems. 2024.
     """
     def __init__(self, user_size: int, item_size: int, emb_size: int, norm: bool = True,
-        num_layers: int = 3, edges: List[Tuple[int, int]] = None) -> None:
+        num_layers: int = 3, alpha: float = 0.6, beta: float = -0.1, gamma: float = 0.2,
+        edges: List[Tuple[int, int]] = None) -> None:
         r"""
         ## Function
-        The constructor of LightGCN model.
+        The constructor of LightGCN++ model.
 
         ## Arguments
         - user_size: int
@@ -66,12 +65,21 @@ class LightGCNModel(IRModel):
             whether to normalize the embeddings in testing,
             note that the embeddings are always normalized in training.
         - num_layers: int
-            the number of layers in the LightGCN model, default is 3
+            the number of layers in the LightGCN++ model, default is 3
+        - alpha: float
+            the norm scaling factor, default is 0.6
+        - beta: float
+            the neighbor weighting factor, default is -0.1
+        - gamma: float
+            the weight of the first layer in the final pooling, default is 0.2
         - edges: List[Tuple[int, int]]
             the edges of the graph, i.e. the user-item interactions
         """
-        super(LightGCNModel, self).__init__(user_size, item_size, emb_size, norm)
+        super(LightGCNPPModel, self).__init__(user_size, item_size, emb_size, norm)
         self.num_layers = num_layers
+        self.alpha = alpha
+        self.beta = beta
+        self.gamma = gamma
         # initialize the embeddings
         self._init_weights()
         # build the normalized graph and register it as a buffer
@@ -98,6 +106,11 @@ class LightGCNModel(IRModel):
         r"""
         ## Function
         Build the normalized graph (COO format sparse matrix) from the user-item interactions.
+        Note that LightGCN++ uses a flexible norm scaling and neighbor weighting strategy, i.e.,
+        $$
+        e_i^{k+1} = \sum_{u \in N_i} 1 / (|N_i|^alpha * |N_u|^beta) * e_u^k / ||e_u^k||_2
+        $$
+        where $N_i$ is the neighbors of item i and $e_i^k$ is the embedding of item i in layer k.
 
         ## Arguments
         - edges: List[Tuple[int, int]]
@@ -114,8 +127,7 @@ class LightGCNModel(IRModel):
         deg = torch.zeros(size)
         for u, v in edges:
             deg[u] += 1
-        deg = torch.sqrt(deg)
-        values = [1 / (deg[u] * deg[v]) for u, v in edges]
+        values = [1 / ((deg[u] ** self.alpha) * (deg[v] ** self.beta)) for u, v in edges]
         # get the sparse matrix
         row, col = zip(*edges)
         graph = torch.sparse_coo_tensor(
@@ -145,11 +157,13 @@ class LightGCNModel(IRModel):
         embs = torch.cat([user_emb, item_emb], dim=0)   # (user_size + item_size, emb_size)
         out_embs = [embs]
         # do Light Graph Convolution (i.e. non-parametric graph convolution)
+        # LightGCN++ adds normalization for the embeddings in each layer
         for _ in range(self.num_layers):
+            embs = F.normalize(embs, p=2, dim=1)
             embs = torch.sparse.mm(self.graph, embs)
             out_embs.append(embs)
-        # mean all the embeddings
-        embs = torch.stack(out_embs, dim=1).mean(dim=1)
+        # mean all the embeddings, the first layer is weighted by gamma
+        embs = self.gamma * out_embs[0] + (1 - self.gamma) * torch.stack(out_embs[1:], dim=1).mean(dim=1)
         user_emb = embs[:self.user_size]
         item_emb = embs[self.user_size:]
         if norm:

@@ -55,7 +55,7 @@ class IROptimizer(ABC):
     - zero_grad:
         Zero the gradients of the optimizer.
     """
-    optimizer: Optimizer = NotImplemented
+    optimizer: Optimizer = None
 
     @abstractmethod
     def __init__(self) -> None:
@@ -63,7 +63,7 @@ class IROptimizer(ABC):
         ## Function
         The constructor of the optimizer.
         """
-        return NotImplemented
+        pass
     
     def step(self, batch: IRDataBatch, epoch: int) -> float:
         r"""
@@ -105,5 +105,5 @@ class IROptimizer(ABC):
         ## Returns
         The loss of the batch data.
         """
-        return NotImplemented
+        pass
 

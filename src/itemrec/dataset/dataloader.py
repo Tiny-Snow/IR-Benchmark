@@ -19,10 +19,11 @@ from typing import (
     Dict,
     Callable,
 )
-from ..utils import logger
-from .dataset import IRDataset
 import torch
 from torch.utils.data import DataLoader
+import random
+from .dataset import IRDataset
+from .sampler import *
 
 # public functions --------------------------------------------------
 __all__ = [
@@ -51,7 +52,7 @@ class IRData:
     scores of all items and rank them to get the Top-K items. Thus,
     you should not use `IRData` for testing.
     """
-    def __init__(self, user: torch.Tensor, pos_item: torch.Tensor, neg_items: torch.Tensor):
+    def __init__(self, user: torch.Tensor, pos_item: torch.Tensor, neg_items: torch.Tensor) -> None:
         r"""
         ## Function
         Initialize the IRData object.
@@ -92,7 +93,7 @@ class IRDataBatch:
 
     Note that `IRDataBatch` is only used for training.
     """
-    def __init__(self, user: torch.Tensor, pos_item: torch.Tensor, neg_items: torch.Tensor):
+    def __init__(self, user: torch.Tensor, pos_item: torch.Tensor, neg_items: torch.Tensor) -> None:
         r"""
         ## Function
         Initialize the IRDataBatch object.
@@ -120,11 +121,6 @@ class IRDataBatch:
     def __str__(self):
         return f'IRDataBatch(user={self.user.shape}, pos_item={self.pos_item.shape}, neg_items={self.neg_items.shape})'
 
-
-# Other IRData Classes ----------------------------------------------
-
-
-
 # IRDataloader -------------------------------------------------------
 class IRDataLoader(DataLoader):
     r"""
@@ -141,7 +137,8 @@ class IRDataLoader(DataLoader):
     Thus, we implement the `collate_fn` to generate batch data `IRDataBatch`.
     """
     def __init__(self, dataset: IRDataset, batch_size: int = 1, shuffle: bool = False, 
-        num_workers: int = 0, drop_last: bool = False, neg_num: int = 0):
+        num_workers: int = 0, drop_last: bool = False, neg_num: int = 0, 
+        sampler: Optional[str] = 'uniform', epoch_sampler: Optional[int] = 0) -> None:
         r"""
         ## Function
         Initialize the IRDataloader.
@@ -159,17 +156,29 @@ class IRDataLoader(DataLoader):
             whether to drop the last incomplete batch.
         neg_num: int (default: 0)
             the number of negative items for each user in the batch.
+        sampler: Optional[str] (default: 'uniform')
+            the sampler to sample negative items. Currently, we only
+            support the following samplers:
+            - 'uniform': UniformSampler
+        epoch_sampler: Optional[int] (default: 0)
+            the number of epochs to update the sampler.
+            If `0`, the sampler will not be updated.
         """
         super(IRDataLoader, self).__init__(
             dataset = dataset.train_interactions,
             batch_size = batch_size,
             shuffle = shuffle,
             num_workers = num_workers,
-            collate_fn = lambda x: self._collate_fn(x),
-            drop_last = drop_last
+            collate_fn = self._collate_fn,
+            drop_last = drop_last,
+            pin_memory=True
         )
         self._dataset = dataset # not same as `dataset` in `DataLoader`
         self.neg_num = neg_num
+        self.sampler_name = sampler
+        assert sampler in ['uniform'], f'Invalid sampler: {sampler}'
+        self.ir_sampler : IRSampler = None
+        self.epoch_sampler = epoch_sampler
 
     def _collate_fn(self, batch: List[Tuple[int, int]]) -> IRDataBatch:
         r"""
@@ -184,11 +193,35 @@ class IRDataLoader(DataLoader):
         IRDataBatch
             the batch data `IRDataBatch`.
         """
+        if self.ir_sampler is None:
+            raise ValueError('Sampler is not initialized. Call `update_sampler` before training.')
         user = torch.tensor([x[0] for x in batch], dtype=torch.long)
         pos_item = torch.tensor([x[1] for x in batch], dtype=torch.long)
-        neg_items = torch.tensor(
-            [self._dataset.sample_negative(u, self.neg_num) for u in user],
-            dtype=torch.long
-        )
+        neg_items = self.ir_sampler.sample(user, self.neg_num)
         return IRDataBatch(user, pos_item, neg_items)
+
+    def update_sampler(self, model: 'IRModel', optimizer: 'IROptimizer', epoch: int) -> None:
+        r"""
+        ## Function
+        Update the dataloader sampler if necessary.
+        
+        ## Arguments
+        model: IRModel
+            the model object.
+        optimizer: IROptimizer
+            the optimizer object.
+        epoch: int
+            the current epoch.
+        """
+        if (self.epoch_sampler == 0 and epoch != 0) or \
+            (self.epoch_sampler != 0 and epoch % self.epoch_sampler != 0):
+            return
+        if self.sampler_name == 'uniform':
+            self.ir_sampler = UniformSampler(
+                user_size=self._dataset.user_size,
+                item_size=self._dataset.item_size,
+                pos_items=self._dataset.train_dict,
+            )
+        else:
+            raise ValueError(f'Invalid sampler: {self.sampler_name}')
 

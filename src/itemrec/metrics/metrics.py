@@ -27,28 +27,48 @@ from typing import (
     Dict,
     Callable,
 )
-from ..utils import logger
-from ..dataset import IRDataset
-from ..model import IRModel
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import numpy as np
 from sklearn.metrics import roc_auc_score
 from tqdm import tqdm
+from functools import wraps
+from ..utils import logger
+from ..dataset import IRDataset
+from ..model import IRModel
 
 # public functions --------------------------------------------------
 __all__ = [
     'eval_metrics',
 ]
 
+# preserve_torch_seed -----------------------------------------------
+def preserve_torch_seed(func: Callable) -> Callable:
+    r"""
+    ## Decorator
+    Preserve the random seed of PyTorch before and after the function.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        torch_state = torch.get_rng_state()
+        result = func(*args, **kwargs)
+        torch.set_rng_state(torch_state)
+        return result
+    return wrapper
+
 # eval_metrics - main function --------------------------------------
+@preserve_torch_seed
 def eval_metrics(model: IRModel, dataset: IRDataset, topk: int, mode: str, 
     batch_size: int, num_workers: int = 0) -> Dict[str, float]:
     r"""
     ## Function
     Evaluate the performance of the recommendation model in the given dataset
     with Top-K metrics. 
+    
+    Note that `torch.topk` may not be stable, so calling `eval_metrics` multiple
+    times may get different results. We have fixed this issue by the decorator
+    `preserve_torch_seed`.
 
     ## Arguments
     - model: IRModel
@@ -104,15 +124,15 @@ def eval_metrics(model: IRModel, dataset: IRDataset, topk: int, mode: str,
             # get the top-K items
             _, topk_items = torch.topk(scores, topk)            # (B, topk)
             # calculate the metrics
-            if mode == 'valid':
-                test_items = np.array(dataset.valid_dict, dtype=object)[batch]  # (B, ...)
-            elif mode == 'test':
-                test_items = np.array(dataset.test_dict, dtype=object)[batch]   # (B, ...)
-            else:
-                raise ValueError(f'Invalid mode for evaluation: {mode}, you should choose from "valid" or "test".')
             for i in range(batch_size):
                 # get the top-K items and the ground truth items
-                topk_item, test_item = topk_items[i], set(test_items[i])
+                topk_item = topk_items[i]
+                if mode == 'valid':
+                    test_item = set(dataset.valid_dict[batch[i]])
+                elif mode == 'test':
+                    test_item = set(dataset.test_dict[batch[i]])
+                else:
+                    raise ValueError(f'Invalid mode for evaluation: {mode}, you should choose from "valid" or "test".')
                 # Precision@K
                 precision_k = eval_precision(topk_item, test_item)
                 metrics[f'Precision@{topk}'] += precision_k

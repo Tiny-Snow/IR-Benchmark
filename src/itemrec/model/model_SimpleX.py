@@ -53,7 +53,7 @@ class SimpleXModel(IRModel):
         In Proceedings of the 30th ACM International Conference on Information & Knowledge Management (pp. 1243-1252).
     """
     def __init__(self, user_size: int, item_size: int, emb_size: int, norm: bool = True,
-        history_len: int = 50, history_weight: float = 0.5, edges: List[Tuple[int, int]] = None):
+        history_len: int = 50, history_weight: float = 0.5, edges: List[Tuple[int, int]] = None) -> None:
         r"""
         ## Function
         The constructor of SimpleX model.

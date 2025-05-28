@@ -32,7 +32,7 @@ search_space_dict = {
     'AdvInfoNCE': {
         'lr': {'_type': 'choice', '_value': [0.1, 0.01, 0.001]},
         'weight_decay': {'_type': 'choice', '_value': [0, 1e-4, 1e-5, 1e-6]},
-        'tau': {'_type': 'choice', '_value': [0.01, 0.05, 0.1, 0.2, 0.5]},
+        'tau': {'_type': 'choice', '_value': [0.01, 0.025, 0.05, 0.1, 0.2, 0.5]},
         'neg_weight': {'_type': 'choice', '_value': [64]},
         'lr_adv': {'_type': 'choice', '_value': [5e-5]},
         'epoch_adv': {'_type': 'choice', '_value': [5]},
@@ -44,8 +44,8 @@ search_space_dict = {
     'BSL': {
         'lr': {'_type': 'choice', '_value': [0.1, 0.01, 0.001]},
         'weight_decay': {'_type': 'choice', '_value': [0, 1e-4, 1e-5, 1e-6]},
-        'tau1': {'_type': 'choice', '_value': [0.01, 0.05, 0.1, 0.2, 0.5]},
-        'tau2': {'_type': 'choice', '_value': [0.01, 0.05, 0.1, 0.2, 0.5]},
+        'tau1': {'_type': 'choice', '_value': [0.01, 0.025, 0.05, 0.1, 0.2, 0.5]},
+        'tau2': {'_type': 'choice', '_value': [0.01, 0.025, 0.05, 0.1, 0.2, 0.5]},
     },
     'GuidedRec': {
         'lr': {'_type': 'choice', '_value': [0.1, 0.01, 0.001]},
@@ -73,12 +73,12 @@ search_space_dict = {
     'PSL': {
         'lr': {'_type': 'choice', '_value': [0.1, 0.01, 0.001]},
         'weight_decay': {'_type': 'choice', '_value': [0, 1e-4, 1e-5, 1e-6]},
-        'tau_star': {'_type': 'choice', '_value': [0.005, 0.025, 0.05, 0.1, 0.25]},
+        'tau_star': {'_type': 'choice', '_value': [0.005, 0.0125, 0.025, 0.05, 0.1, 0.25]},
     },
     'SLatK': {
         'lr': {'_type': 'choice', '_value': [0.1, 0.01, 0.001]},
         'weight_decay': {'_type': 'choice', '_value': [0, 1e-4, 1e-5, 1e-6]},
-        'tau': {'_type': 'choice', '_value': [0.01, 0.05, 0.1, 0.2, 0.5]},      # NOTE: using the optimal value of Softmax
+        'tau': {'_type': 'choice', '_value': [0.01, 0.025, 0.05, 0.1, 0.2, 0.5]},   # NOTE: using the optimal value of Softmax
         'tau_beta': {'_type': 'quniform', '_value': [0.5, 3, 0.25]},
         'k': {'_type': 'choice', '_value': [5, 20, 50]},
         'epoch_quantile': {'_type': 'choice', '_value': [5, 20]},
@@ -86,7 +86,22 @@ search_space_dict = {
     'Softmax': {
         'lr': {'_type': 'choice', '_value': [0.1, 0.01, 0.001]},
         'weight_decay': {'_type': 'choice', '_value': [0, 1e-4, 1e-5, 1e-6]},
-        'tau': {'_type': 'choice', '_value': [0.01, 0.05, 0.1, 0.2, 0.5]},
+        'tau': {'_type': 'choice', '_value': [0.01, 0.025, 0.05, 0.1, 0.2, 0.5]},
+    },
+    'SogCLR': {
+        'lr': {'_type': 'choice', '_value': [0.1, 0.01, 0.001]},
+        'weight_decay': {'_type': 'choice', '_value': [0, 1e-4, 1e-5, 1e-6]},
+        'tau': {'_type': 'choice', '_value': [0.01, 0.025, 0.05, 0.1, 0.2, 0.5]},
+        'gamma_g': {'_type': 'choice', '_value': [0.1, 0.3, 0.5, 0.7, 0.9]},
+    },
+    'SogSLatK': {
+        'lr': {'_type': 'choice', '_value': [0.1, 0.01, 0.001]},
+        'weight_decay': {'_type': 'choice', '_value': [0, 1e-4, 1e-5, 1e-6]},
+        'tau': {'_type': 'choice', '_value': [0.01, 0.025, 0.05, 0.1, 0.2, 0.5]},
+        'tau_beta': {'_type': 'quniform', '_value': [0.5, 3, 0.25]},
+        'k': {'_type': 'choice', '_value': [5, 20, 50]},
+        'epoch_quantile': {'_type': 'choice', '_value': [5, 20]},
+        'gamma_g': {'_type': 'choice', '_value': [0.1, 0.3, 0.5, 0.7, 0.9]},
     },
 }
 

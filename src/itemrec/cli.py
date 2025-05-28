@@ -22,7 +22,7 @@ import os
 import hashlib
 from .args import parse_args
 from .utils import logger, timer
-from .utils import set_experiments, run, get_info
+from .utils import set_experiments_main, run
 from .hyper import get_params
 
 # main function -----------------------------------------------------
@@ -35,16 +35,12 @@ def main():
     args = parse_args()
     # NNI: update hyper parameters
     args = get_params(args)
-    # set up experiment settings and global variables
-    set_experiments(args)
+    # set up basic configurations
+    set_experiments_main(args)
     # start global time record
     timer.start('GLOBAL')
     # run the training and testing process
-    info = get_info(args)
-    # if info is too long, use hash
-    if len(info) > os.pathconf('.', 'PC_NAME_MAX'):
-        info = hashlib.md5(info.encode()).hexdigest()
-    run(args.num_epochs, args.batch_size, args.num_workers, args.save_dir, info)
+    run(args)
     # end global time record
     timer.end('GLOBAL')
 

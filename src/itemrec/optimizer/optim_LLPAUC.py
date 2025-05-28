@@ -122,7 +122,7 @@ class LLPAUCOptimizer(IROptimizer):
         arXiv preprint arXiv:2403.00844.
     """
     def __init__(self, model: IRModel, lr: float = 0.001, weight_decay: float = 0.0, 
-        neg_num: int = 1000, alpha: float = 0.7, beta: float = 0.1):
+        neg_num: int = 1000, alpha: float = 0.7, beta: float = 0.1) -> None:
         r"""
         ## Function
         The constructor of LLPAUC optimizer.
@@ -186,7 +186,7 @@ class LLPAUCOptimizer(IROptimizer):
         a, b = self.a.item(), self.b.item()
         self.gamma.data.clamp_(max(-a, b - 1), 1)
 
-    def cal_loss(self, batch: IRDataBatch) -> float:
+    def cal_loss(self, batch: IRDataBatch) -> torch.Tensor:
         r"""
         ## Function
         Calculate the LLPAUC loss for batch data.

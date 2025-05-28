@@ -8,7 +8,7 @@
 #  PSL is a NDCG surrogate loss function with DRO-robusetness optimization.
 #  The PSL optimizer is inherited from IROptimizer.
 #  Reference:
-#  - Yang, W., Chen, J., Xin, X., Zhou, S., Hu, B., Feng, Y., ... & Wang, C. 
+#  - Yang, W., Chen, J., Xin, X., Zhou, S., Hu, B., Feng, Y., Chen, C. & Wang, C. 
 #   PSL: Rethinking and Improving Softmax Loss from Pairwise Perspective for Recommendation. 
 #   In The Thirty-eighth Annual Conference on Neural Information Processing Systems.
 # -------------------------------------------------------------------
@@ -97,6 +97,11 @@ class PSLOptimizer(IROptimizer):
     NOTE: The temperature parameter $\tau^*$ can be tuned in the training process
     if you set `adaptive` to True. However, the $\tau$ is fixed, since we need to
     make sure $\tau \geq 2$.
+    
+    ## References
+    - Yang, W., Chen, J., Xin, X., Zhou, S., Hu, B., Feng, Y., Chen, C. & Wang, C.
+        PSL: Rethinking and Improving Softmax Loss from Pairwise Perspective for Recommendation.
+        In The Thirty-eighth Annual Conference on Neural Information Processing Systems.
     """
     def __init__(self, model: IRModel, lr: float = 0.001, weight_decay: float = 0.0, 
         neg_num: int = 1000, tau: float = 1.0, tau_star: float = 1.0, method: int = 1, 

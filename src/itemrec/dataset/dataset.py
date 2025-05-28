@@ -19,69 +19,14 @@ from typing import (
     Dict,
     Callable,
 )
-from ..utils import logger
 import os
 import csv
 import random
-import cppimport
 
 # public functions --------------------------------------------------
 __all__ = [
     'IRDataset',
 ]
-
-# Sampling ----------------------------------------------------------
-def _py_sampling(item_num: int, sample_num: int, exclude_items: List[int]) -> List[int]:
-    r"""
-    ## Function
-    Python implementation of sampling.
-    This function samples `sample_num` items from `items` while excluding
-    the items in `exclude_items`.
-
-    ## Arguments
-    item_num: int
-        The number of items. The set of items is [0, item_num).
-    sample_num: int
-        The number of items to sample.
-    exclude_items: List[int]
-        The set of items to exclude.
-    """
-    remain_items = set(range(item_num)) - set(exclude_items)
-    assert len(remain_items) >= sample_num, "When sampling, the sample_num should be less than items size."
-    return random.sample(list(remain_items), sample_num)
-
-try:        # use C++ sampling if available
-    _cpp_sampling = cppimport.imp("itemrec.dataset.cpp_sampling")
-    # _cpp_sampling.set_seed(0)   # set random seed for C++ sampling
-    USE_CPP_SAMPLE = True
-    # NOTE: logger is not initialized here
-    # logger.info("Cppimport succeeded, use C++ sampling.")
-    print("Cppimport succeeded, use C++ sampling.")
-except:     # else use Python sampling (extemely slow !!!)
-    USE_CPP_SAMPLE = False
-    # logger.warning("Cppimport failed, use Python sampling instead.")
-    # NOTE: logger is not initialized here
-    print("Cppimport failed, use Python sampling instead.")
-
-# sampling wrapper
-def sampling(item_num: int, sample_num: int, exclude_items: List[int]) -> List[int]:
-    r"""
-    ## Function
-    Sampling Wrapper.
-    See `_py_sampling` for more details.
-    """
-    if USE_CPP_SAMPLE:
-        # each time launch, set a random `random_seed` for C++ sampling
-        # the top-level random seed is set by Python random module.
-        _cpp_sampling.set_seed(random.randint(0, int(1e9)))
-        return _cpp_sampling.sample(item_num, sample_num, exclude_items)
-    else:
-        return _py_sampling(item_num, sample_num, exclude_items)
-
-# TODO: We plan to increase the efficiency of the C++ sampling in the future.
-# We recommend using the torch sampling method, e.g. torch.multinomial on GPU, 
-# since it has shown better performance in our experiments.
-
 
 # ItemRec Base Dataset ----------------------------------------------
 class IRDataset:
@@ -131,6 +76,7 @@ class IRDataset:
         The item ids are sorted in ascending order.
     - test_dict: the user-item dict for the testing set, i.e. (user_id: [item_ids])
         The item ids are sorted in ascending order.
+    - resplit: re-split the training and validation sets, especially for cross-validation.
 
     The `IRDataset` also provides the following key methods:
     - sample_negative: sample negative items for a user randomly.
@@ -148,6 +94,7 @@ class IRDataset:
             Whether to use the valid set. Default is `False` (use valid set).
         """
         super(IRDataset, self).__init__()
+        self.data_dir = data_dir
         train_file = os.path.join(data_dir, 'train.tsv')
         test_file = os.path.join(data_dir, 'test.tsv')
         # interactions: (user_id, item_id)
@@ -226,27 +173,6 @@ class IRDataset:
         for i in range(self._user_size):
             ui_dict[i].sort()
         return ui_dict
-
-    def sample_negative(self, user_id: int, size: int) -> List[int]:
-        r"""
-        ## Function
-        Sample negative items for a user randomly.
-        The negative items are sampled from the items that the user
-        has not interacted with (in the training set). Note that 
-        even if the user has interacted with the item in the testing
-        set, it may still be sampled as a negative item.
-
-        ## Arguments
-        user_id: int
-            The user id.
-        size: int
-            The number of negative items to sample.
-
-        ## Returns
-        negative_items: List[int]
-            The negative items.
-        """
-        return sampling(self._item_size, size, self._train_dict[user_id])
     
     def _split_train_valid(self, train_dict: List[List[int]]) -> Tuple[List[List[int]], List[List[int]]]:
         r"""
@@ -367,8 +293,4 @@ class IRDataset:
         if self.no_valid:
             return self.train_size + self.test_size
         return self.train_size + self.valid_size + self.test_size
-    
-
-
-# Other IRDataset Classes -------------------------------------------
 

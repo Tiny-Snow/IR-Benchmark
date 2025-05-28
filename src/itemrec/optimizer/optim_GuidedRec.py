@@ -91,7 +91,7 @@ class GuidedRecOptimizer(IROptimizer):
         In Proceedings of the 44th International ACM SIGIR Conference on Research and Development in Information Retrieval (pp. 605-613).
     """
     def __init__(self, model: IRModel, lr: float = 0.001, weight_decay: float = 0.0, 
-        neg_num: int = 9):
+        neg_num: int = 9) -> None:
         r"""
         ## Function
         The constructor of GuidedRec optimizer.
@@ -177,7 +177,7 @@ class GuidedRecOptimizer(IROptimizer):
             out = self.act(self.out_FC2(out))           # (B, 1)
             return out.squeeze(1)                       # (B)
 
-    def cal_loss(self, batch: IRDataBatch) -> float:
+    def cal_loss(self, batch: IRDataBatch) -> torch.Tensor:
         r"""
         ## Function
         Calculate the GuidedRec loss for batch data.
@@ -204,7 +204,7 @@ class GuidedRecOptimizer(IROptimizer):
         loss += self.model.additional_loss(batch, user_emb, item_emb, *addition)
         return loss
 
-    def cal_loss_surrogate(self, batch: IRDataBatch) -> float:
+    def cal_loss_surrogate(self, batch: IRDataBatch) -> torch.Tensor:
         r"""
         ## Function
         Calculate the surrogate loss for batch data.
@@ -237,7 +237,7 @@ class GuidedRecOptimizer(IROptimizer):
         loss = torch.mean((edcg - dcg) ** 2)
         return loss
 
-    def cal_loss_dcg(self, batch: IRDataBatch) -> float:
+    def cal_loss_dcg(self, batch: IRDataBatch) -> torch.Tensor:
         r"""
         ## Function
         Calculate the DCG loss for batch data.

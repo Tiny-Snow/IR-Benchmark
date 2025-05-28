@@ -6,21 +6,21 @@
 **IR-Benchmark** is a unified, extensible, and reproducible benchmark for **collaborative filtering (CF) research**, including:
 - **Benchmark datasets**: various IID and OOD (with popularity bias) recommendation datasets, e.g., Amazon, Douban, Gowalla, MovieLens, Yelp, etc.
 - **Advanced recommendation models**: conventional and advanced recommendation models, e.g., MF, LightGCN, LightGCN++, XSimGCL, etc.
-- **SOTA recommendation losses**: various state-of-the-art recommendation losses, e.g., BPR, Lambdaloss, SL, PSL, SL@$K$, etc.
+- **SOTA recommendation losses**: various state-of-the-art recommendation losses, e.g., BPR, Lambdaloss, SL, PSL, SL@K, etc.
 - **Unified interface**: a unified interface for data processing, training, evaluation, and hyperparameter tuning based on [NNI framework](https://github.com/microsoft/nni).
 - **Easy-to-extend**: decoupling structure for easy extension of new datasets, models, and losses.
 
 ## :tada: News
 
 - **[May 28, 2025]** **IR-Benchmark V1.0** has been released!
-- **[May 15, 2025]** Our paper [Breaking the Top-$K$ Barrier: Advancing Top-$K$ Ranking Metrics Optimization in Recommender Systems](https://openreview.net/forum?id=5hKTOc3ch1), which proposes the SL@$K$ loss, has been accepted to **SIGKDD 2025** with **Novelty 3.6/4.0** and **Technical Quality 4.0/4.0**!
+- **[May 15, 2025]** Our paper [Breaking the Top-K Barrier: Advancing Top-K Ranking Metrics Optimization in Recommender Systems](https://openreview.net/forum?id=5hKTOc3ch1), which proposes the SL@K loss, has been accepted to **SIGKDD 2025** with **Novelty 3.6/4.0** and **Technical Quality 4.0/4.0**!
 - **[Sep 26, 2024]** Our paper [PSL: Rethinking and Improving Softmax Loss from Pairwise Perspective for Recommendation](https://arxiv.org/abs/2411.00163), which proposes the PSL loss, has been accepted to **NeurIPS 2024**!
 
 ## Benchmark Datasets
 
 We provide a variety of recommendation datasets in [Tiny-Snow/IR-Benchmark-Dataset](https://github.com/Tiny-Snow/IR-Benchmark-Dataset), including both IID and OOD datasets. Please refer to the [IID dataset summary](https://github.com/Tiny-Snow/IR-Benchmark-Dataset/blob/main/data_iid/dataset_summary.md) and [OOD dataset summary](https://github.com/Tiny-Snow/IR-Benchmark-Dataset/blob/main/data_ood/dataset_summary_ood.md) for more details.
 
-Additionally, we provide a unified interface for performance evaluation, supporting a wide range of evaluation metrics, including NDCG@$K$, Recall@$K$, Precision@$K$, MRR@$K$, HitRatio@$K$, F1@$K$ and AUC.
+Additionally, we provide a unified interface for performance evaluation, supporting a wide range of evaluation metrics, including NDCG@K, Recall@K, Precision@K, MRR@K, HitRatio@K, F1@K and AUC.
 
 ## Benchmark Models
 
@@ -46,15 +46,15 @@ We provide various recommendation losses to fill the gap where the existing repo
 | [LambdaRank](src/itemrec/optimizer/optim_LambdaRank.py) | A conventional pairwise loss for ranking | [Burges, Learning '10](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/MSR-TR-2010-82.pdf) |
 | [LambdaLoss](src/itemrec/optimizer/optim_LambdaLoss.py) | A variant of LambdaRank for NDCG optimization | [Wang et al., CIKM '18](https://dl.acm.org/doi/abs/10.1145/3269206.3271784) |
 | [GuidedRec](src/itemrec/optimizer/optim_GuidedRec.py) | A model surrogate method for NDCG | [Rashed et al., SIGIR'21](https://dl.acm.org/doi/abs/10.1145/3404835.3462864) |
-| [LambdaLoss@$K$](src/itemrec/optimizer/optim_LambdaLossAtK.py) | A variant of LambdaLoss for NDCG@$K$ optimization | [Jagerman et al., SIGIR '22](https://dl.acm.org/doi/abs/10.1145/3477495.3531849) |
+| [LambdaLoss@K](src/itemrec/optimizer/optim_LambdaLossAtK.py) | A variant of LambdaLoss for NDCG@K optimization | [Jagerman et al., SIGIR '22](https://dl.acm.org/doi/abs/10.1145/3477495.3531849) |
 | [SogCLR](src/itemrec/optimizer/optim_SogCLR.py) | A variant of SimCLR/SL for small-batch negative sampling | [Yuan et al., ICML '22](https://proceedings.mlr.press/v162/yuan22b.html) |
 | [AdvInfoNCE](src/itemrec/optimizer/optim_AdvInfoNCE.py) | Adversarial InfoNCE loss, a DRO variant of InfoNCE/SL | [Zhang et al., NeurIPS '23](https://proceedings.neurips.cc/paper_files/paper/2023/hash/13f1750b825659394a6499399e7637fc-Abstract-Conference.html) |
 | [SL](src/itemrec/optimizer/optim_Softmax.py) | Softmax loss, the SOTA cross-entropy loss for recommendation | [Wu et al., TOIS '24](https://dl.acm.org/doi/10.1145/3637061) |
-| [LLPAUC](src/itemrec/optimizer/optim_LLPAUC.py) | Lower-Left Partial AUC loss, a surrogate loss for Recall@$K$ and Precision@$K$ | [Shi et al., WWW '24](https://dl.acm.org/doi/10.1145/3589334.3645371) |
+| [LLPAUC](src/itemrec/optimizer/optim_LLPAUC.py) | Lower-Left Partial AUC loss, a surrogate loss for Recall@K and Precision@K | [Shi et al., WWW '24](https://dl.acm.org/doi/10.1145/3589334.3645371) |
 | [BSL](src/itemrec/optimizer/optim_BSL.py) | Bilateral Softmax Loss, a DRO variant of SL | [Wu et al., ICDE '24](https://ieeexplore.ieee.org/abstract/document/10598015) |
 | [PSL](src/itemrec/optimizer/optim_PSL.py) | Pairwise Softmax Loss, a pairwise extension of SL, which only changes the activation function | [Yang et al., NeurIPS '24](https://arxiv.org/abs/2411.00163) <br> **(Ours)** |
-| [SL@$K$](src/itemrec/optimizer/optim_SLatK.py) | The SOTA surrogate loss for NDCG@$K$, which is essentially a weighted SL| [Yang et al., KDD '25](https://openreview.net/forum?id=5hKTOc3ch1) <br> **(Ours)** |
-| [SogSL@$K$](src/itemrec/optimizer/optim_SogSLatK.py) | A SogCLR-enhanced variant of SL@$K$ for small-batch negative sampling | [Yuan et al., ICML '22](https://proceedings.mlr.press/v162/yuan22b.html) <br> [Yang et al., KDD '25](https://openreview.net/forum?id=5hKTOc3ch1) <br> **(Ours)** |
+| [SL@K](src/itemrec/optimizer/optim_SLatK.py) | The SOTA surrogate loss for NDCG@K, which is essentially a weighted SL| [Yang et al., KDD '25](https://openreview.net/forum?id=5hKTOc3ch1) <br> **(Ours)** |
+| [SogSL@K](src/itemrec/optimizer/optim_SogSLatK.py) | A SogCLR-enhanced variant of SL@K for small-batch negative sampling | [Yuan et al., ICML '22](https://proceedings.mlr.press/v162/yuan22b.html) <br> [Yang et al., KDD '25](https://openreview.net/forum?id=5hKTOc3ch1) <br> **(Ours)** |
 
 ## :rocket: Quick Start
 
@@ -95,7 +95,7 @@ The above command configures the following settings:
 - The MF model is used as backbone, where the embedding size `emb_size` is set to 64, and the cosine similarity is used for embedding normalization (`--norm`).
 - The dataset path is the Amazon2014-Health in `data_path`, i.e., `/path/to/data/amazon2014-health/proc`.
 - The number of epochs is set to 200, with a batch size of 1024 and 16 workers for data loading. The negative sampler is set to `uniform` sampling (i.e., randomly sampling items except for the positive item). The `epoch_sampler` is used for updating the sampler every `epoch_sampler` epochs, which is useful for other samplers (e.g., hard-negative sampling). We use 5-fold cross-validation (`fold=5`).
-- The loss function is set to SL@$K$ with $K=20$, a negative sampling number `neg_num` of 1000, a temperature `tau` of 0.2, a `tau_beta` value of 2.25, and a quantile update period `epoch_quantile` of 20 epochs. The learning rate `lr` is set to 0.01, and the weight decay `weight_decay` is set to 0.0.
+- The loss function is set to SL@K with $K=20$, a negative sampling number `neg_num` of 1000, a temperature `tau` of 0.2, a `tau_beta` value of 2.25, and a quantile update period `epoch_quantile` of 20 epochs. The learning rate `lr` is set to 0.01, and the weight decay `weight_decay` is set to 0.0.
 
 For detailed CLI usage, please refer to [src/itemrec/args.py](src/itemrec/args.py).
 
@@ -103,7 +103,7 @@ For detailed CLI usage, please refer to [src/itemrec/args.py](src/itemrec/args.p
 
 For more quick start and result reproduction, we recommend using the [NNI framework](https://github.com/microsoft/nni) provided in [src/run_nni.py](src/run_nni.py). Specifically, we provide a pre-defined CLI command as above in [src/run_nni.py](src/run_nni.py), and the hyperparameters are specified in [src/itemrec/hyper.py](src/itemrec/hyper.py).
 
-For quick start, if we want to test SL@$K$ on 2-layer LightGCN and Gowalla dataset, we first set the following paths in [src/run_nni.py](src/run_nni.py) to your own paths:
+For quick start, if we want to test SL@K on 2-layer LightGCN and Gowalla dataset, we first set the following paths in [src/run_nni.py](src/run_nni.py) to your own paths:
 
 ```python
 # TODO: `/path/to/your/` must be replaced with the actual paths

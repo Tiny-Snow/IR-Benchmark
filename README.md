@@ -13,8 +13,8 @@
 ## :tada: News
 
 - **[May 28, 2025]** **IR-Benchmark V1.0** has been released!
-- **[May 15, 2025]** Our paper [Breaking the Top-K Barrier: Advancing Top-K Ranking Metrics Optimization in Recommender Systems](https://openreview.net/forum?id=5hKTOc3ch1), which proposes the SL@K loss, has been accepted to **SIGKDD 2025** with **Novelty 3.6/4.0** and **Technical Quality 4.0/4.0**!
-- **[Sep 26, 2024]** Our paper [PSL: Rethinking and Improving Softmax Loss from Pairwise Perspective for Recommendation](https://arxiv.org/abs/2411.00163), which proposes the PSL loss, has been accepted to **NeurIPS 2024**!
+- **[May 15, 2025]** Our paper [Breaking the Top-K Barrier: Advancing Top-K Ranking Metrics Optimization in Recommender Systems](paper/SLatK-KDD-2025.pdf), which proposes the SL@K loss, has been accepted to **SIGKDD 2025** with **Novelty 3.6/4.0** and **Technical Quality 4.0/4.0**!
+- **[Sep 26, 2024]** Our paper [PSL: Rethinking and Improving Softmax Loss from Pairwise Perspective for Recommendation](paper/PSL-NeurIPS-2024.pdf), which proposes the PSL loss, has been accepted to **NeurIPS 2024**!
 
 ## Benchmark Datasets
 
@@ -52,9 +52,9 @@ We provide various recommendation losses to fill the gap where the existing repo
 | [SL](src/itemrec/optimizer/optim_Softmax.py) | Softmax loss, the SOTA cross-entropy loss for recommendation | [Wu et al., TOIS '24](https://dl.acm.org/doi/10.1145/3637061) |
 | [LLPAUC](src/itemrec/optimizer/optim_LLPAUC.py) | Lower-Left Partial AUC loss, a surrogate loss for Recall@K and Precision@K | [Shi et al., WWW '24](https://dl.acm.org/doi/10.1145/3589334.3645371) |
 | [BSL](src/itemrec/optimizer/optim_BSL.py) | Bilateral Softmax Loss, a DRO variant of SL | [Wu et al., ICDE '24](https://ieeexplore.ieee.org/abstract/document/10598015) |
-| [PSL](src/itemrec/optimizer/optim_PSL.py) | Pairwise Softmax Loss, a pairwise extension of SL, which only changes the activation function | [Yang et al., NeurIPS '24](https://arxiv.org/abs/2411.00163) <br> **(Ours)** |
-| [SL@K](src/itemrec/optimizer/optim_SLatK.py) | The SOTA surrogate loss for NDCG@K, which is essentially a weighted SL| [Yang et al., KDD '25](https://openreview.net/forum?id=5hKTOc3ch1) <br> **(Ours)** |
-| [SogSL@K](src/itemrec/optimizer/optim_SogSLatK.py) | A SogCLR-enhanced variant of SL@K for small-batch negative sampling | [Yuan et al., ICML '22](https://proceedings.mlr.press/v162/yuan22b.html) <br> [Yang et al., KDD '25](https://openreview.net/forum?id=5hKTOc3ch1) <br> **(Ours)** |
+| [PSL](src/itemrec/optimizer/optim_PSL.py) | Pairwise Softmax Loss, a pairwise extension of SL, which only changes the activation function | [Yang et al., NeurIPS '24](paper/PSL-NeurIPS-2024.pdf) <br> **(Ours)** |
+| [SL@K](src/itemrec/optimizer/optim_SLatK.py) | The SOTA surrogate loss for NDCG@K, which is essentially a weighted SL| [Yang et al., KDD '25](paper/SLatK-KDD-2025.pdf) <br> **(Ours)** |
+| [SogSL@K](src/itemrec/optimizer/optim_SogSLatK.py) | A SogCLR-enhanced variant of SL@K for small-batch negative sampling | [Yuan et al., ICML '22](https://proceedings.mlr.press/v162/yuan22b.html) <br> [Yang et al., KDD '25](paper/SLatK-KDD-2025.pdf) <br> **(Ours)** |
 
 ## :rocket: Quick Start
 
